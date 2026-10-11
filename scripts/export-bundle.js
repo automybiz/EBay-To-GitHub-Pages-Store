@@ -190,7 +190,7 @@ function generateBundle() {
   // Convert to relative paths with normalized forward slashes
   const relativeFilePaths = allFilePaths.map((fp) => path.relative(ROOT_DIR, fp).replace(/\\/g, '/')).sort();
 
-  let bundleContent = `# QB INV To GitHub Pages Store - Source Code Bundle\n`;
+  let bundleContent = `# EBay-To-GitHub-Pages-Store - Source Code Bundle\n`;
   bundleContent += `**Generated:** ${timestamp}\n`;
   bundleContent += `**Commit Message:** ${commitMessage}\n`;
   bundleContent += `**Total Included Files:** ${relativeFilePaths.length}\n\n`;
