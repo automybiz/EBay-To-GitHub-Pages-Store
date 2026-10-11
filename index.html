@@ -81,24 +81,186 @@
       margin-bottom: 55px;
     }
 
-    /* Left Column: Logo & Intro */
+    /* Left Column: Slideshow Rotator & Intro */
     .hero-left {
       display: flex;
       flex-direction: column;
       align-items: center;
       text-align: center;
+      width: 100%;
     }
 
-    .hero-logo-wrap {
+    /* ==========================================================================
+       SLIDESHOW ROTATOR STYLES
+       ========================================================================== */
+    .hero-slideshow-container {
       width: 100%;
       max-width: 480px;
       margin-bottom: 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
     }
 
-    .hero-logo-wrap img {
+    .epw-slideshow {
+      position: relative;
       width: 100%;
-      height: auto;
-      display: block;
+      height: 250px;
+      overflow: hidden;
+      border-radius: 8px;
+      border: 1.5px solid rgba(229, 37, 33, 0.35);
+      background: #121517;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+      perspective: 1000px;
+    }
+
+    .slideshow-track {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+
+    .slide-item {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0;
+      transition: all 0.65s cubic-bezier(0.25, 1, 0.5, 1);
+      pointer-events: none;
+      backface-visibility: hidden;
+    }
+
+    /* --- Transition Effects --- */
+    /* Fade */
+    .slide-item.effect-fade {
+      opacity: 0;
+      transform: none;
+    }
+    .slide-item.effect-fade.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* Slide Horizontal */
+    .slide-item.effect-slide {
+      opacity: 0;
+      transform: translateX(100%);
+    }
+    .slide-item.effect-slide.active {
+      opacity: 1;
+      transform: translateX(0);
+      pointer-events: auto;
+    }
+    .slide-item.effect-slide.prev-out {
+      opacity: 0;
+      transform: translateX(-100%);
+    }
+
+    /* Zoom / Ken Burns */
+    .slide-item.effect-zoom {
+      opacity: 0;
+      transform: scale(1.12);
+    }
+    .slide-item.effect-zoom.active {
+      opacity: 1;
+      transform: scale(1);
+      pointer-events: auto;
+    }
+
+    /* 3D Flip */
+    .slide-item.effect-flip {
+      opacity: 0;
+      transform: rotateY(90deg);
+    }
+    .slide-item.effect-flip.active {
+      opacity: 1;
+      transform: rotateY(0deg);
+      pointer-events: auto;
+    }
+
+    /* Double Chevron Navigation Buttons */
+    .slideshow-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 38px;
+      height: 38px;
+      background: rgba(18, 21, 23, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 50%;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 10;
+      transition: all 0.2s ease;
+      backdrop-filter: blur(4px);
+    }
+
+    .slideshow-arrow:hover {
+      background: rgba(229, 37, 33, 0.9);
+      border-color: #e52521;
+      color: #ffffff;
+      transform: translateY(-50%) scale(1.1);
+      box-shadow: 0 0 12px rgba(229, 37, 33, 0.5);
+    }
+
+    .slideshow-arrow.prev { left: 10px; }
+    .slideshow-arrow.next { right: 10px; }
+
+    .slideshow-arrow svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* Interactive Thumbnail Strip */
+    .slideshow-thumbs {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+      overflow-x: auto;
+      max-width: 100%;
+      padding: 4px 2px;
+      scrollbar-width: thin;
+    }
+
+    .slideshow-thumb {
+      width: 48px;
+      height: 30px;
+      object-fit: cover;
+      border-radius: 4px;
+      border: 1.5px solid rgba(255, 255, 255, 0.15);
+      cursor: pointer;
+      opacity: 0.55;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .slideshow-thumb:hover {
+      opacity: 0.9;
+      border-color: #ffffff;
+    }
+
+    .slideshow-thumb.active {
+      opacity: 1;
+      border-color: #e52521;
+      box-shadow: 0 0 6px rgba(229, 37, 33, 0.6);
+      transform: scale(1.05);
+    }
+
+    .slideshow-loading {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 13px;
+      color: #888;
+      letter-spacing: 0.5px;
     }
 
     .hero-subtitle-primary {
@@ -289,14 +451,36 @@
   <div class="page-wrapper">
     <!-- Top Two-Column Content Block -->
     <section class="hero-grid">
-      <!-- Left Column: EPW Crest Logo & Welcome Blurb -->
+      
+      <!-- Left Column: EPW Slideshow Rotator & Intro -->
       <div class="hero-left">
-        <div class="hero-logo-wrap">
-          <img 
-            src="assets/images/EURO-PARTS-WEST-logo-720-v1911.gif" 
-            alt="Euro Parts West LLC Logo" 
-          />
+        <div class="hero-slideshow-container" id="slideshowContainer">
+          
+          <!-- Rotator Frame -->
+          <div class="epw-slideshow" id="epwSlideshow">
+            <div class="slideshow-track" id="slideshowTrack">
+              <span class="slideshow-loading" id="slideshowLoading">Loading gallery...</span>
+            </div>
+
+            <!-- Double Chevron Navigation -->
+            <button class="slideshow-arrow prev" id="slidePrev" aria-label="Previous slide">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="11 17 6 12 11 7"></polyline>
+                <polyline points="18 17 13 12 18 7"></polyline>
+              </svg>
+            </button>
+            <button class="slideshow-arrow next" id="slideNext" aria-label="Next slide">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="13 17 18 12 13 7"></polyline>
+                <polyline points="6 17 11 12 6 7"></polyline>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Thumbnail Row -->
+          <div class="slideshow-thumbs" id="slideshowThumbs"></div>
         </div>
+
         <div class="hero-subtitle-primary">European Auto Parts Distribution &amp; Design</div>
         <div class="hero-subtitle-secondary">Quality proven, value superior.</div>
         <p class="hero-intro-copy">
@@ -410,9 +594,286 @@
   <!-- App Script for Dark/Light Theme Switching -->
   <script src="assets/js/app.js"></script>
 
+  <!-- LeadConnector Chat Widget -->
   <script src="https://widgets.leadconnectorhq.com/loader.js" 
     data-resources-url="https://widgets.leadconnectorhq.com/chat-widget/loader.js" 
     data-widget-id="6aac1b9dce16b8058881fe32"></script>
+
+  <!-- =========================================================================
+       AUTONOMOUS ROTATOR & DIRECTORY SCANNER ENGINE
+       ========================================================================= -->
+  <script>
+    (function() {
+      // ============================================================================
+      // SLIDESHOW CONFIGURATION SETTINGS
+      // ============================================================================
+      const SLIDESHOW_DIR                = 'assets/images/rotate/';  // Target directory to auto-scan
+      const SLIDESHOW_GALLERIES          = ['GBP'];                       // Sub-folders: e.g. ['gallery_a', 'gallery_b', 'random']. Leave [] to ignore sub-folders.
+      const SLIDESHOW_RANDOM             = false;                    // Display order: true/1 (shuffle) or false/0 (alphabetical by filename)
+      const SLIDESHOW_WIDTH              = '100%';                   // Container width: '100%' (fluid up to 480px) or exact pixels e.g. '480px'
+      const SLIDESHOW_HEIGHT             = '250px';                  // Container height: exact pixels e.g. '250px', '280px', or 'auto'
+      const SLIDESHOW_SPEED              = 3000;                     // Rotation interval in milliseconds (3000 = 3 seconds)
+      const SLIDESHOW_PAUSE_ON_HOVER     = true;                     // Pause rotation when mouse hovers over slide: true/1 or false/0
+      const SLIDESHOW_TRANSITION_EFFECTS = ['fade', 'slide', 'zoom', 'random']; // Active transitions: 'fade', 'slide', 'zoom', 'flip', or 'random'
+      const SLIDESHOW_SHOW_THUMBS        = true;                     // Show thumbnail strip below rotator: true/1 or false/0
+      const GITHUB_REPO                  = 'automybiz/QB-INV-To-GitHub-Pages-Store'; // Public repo path for auto-folder discovery
+
+      // Local fallback images (ensures smooth loading even if offline / API rate-limited)
+      const LOCAL_FALLBACKS = [
+        'assets/images/rotate/img_1_876de97b.jpg',
+        'assets/images/rotate/img_2_a1d0cb01.jpg',
+        'assets/images/EURO-PARTS-WEST-logo-720-v1911.gif'
+      ];
+
+      // Internal State
+      let slideImages = [];
+      let currentIndex = 0;
+      let timer = null;
+      let isPaused = false;
+      const track = document.getElementById('slideshowTrack');
+      const thumbsContainer = document.getElementById('slideshowThumbs');
+      const container = document.getElementById('epwSlideshow');
+      const wrapper = document.getElementById('slideshowContainer');
+      const loadingLabel = document.getElementById('slideshowLoading');
+
+      // Apply sizing parameters
+      if (wrapper && SLIDESHOW_WIDTH) {
+        wrapper.style.maxWidth = SLIDESHOW_WIDTH === '100%' ? '480px' : SLIDESHOW_WIDTH;
+      }
+      if (container) {
+        if (SLIDESHOW_HEIGHT && SLIDESHOW_HEIGHT !== 'auto') {
+          container.style.height = SLIDESHOW_HEIGHT;
+        }
+      }
+
+      // 1. Resolve Target Directory (handles subfolders & random selection)
+      function resolveTargetDirectory() {
+        let base = SLIDESHOW_DIR.replace(/\/+$/, '') + '/';
+        const galleries = Array.isArray(SLIDESHOW_GALLERIES) ? [...SLIDESHOW_GALLERIES] : [];
+
+        if (galleries.length > 0) {
+          let chosen = galleries[0];
+          if (galleries.includes('random') || galleries.length > 1) {
+            const pool = galleries.filter(g => g !== 'random');
+            chosen = pool.length > 0 ? pool[Math.floor(Math.random() * pool.length)] : '';
+          }
+          if (chosen && chosen !== 'random') {
+            base += chosen.replace(/^\/+|\/+$/g, '') + '/';
+          }
+        }
+        return base;
+      }
+
+      // 2. Autonomous Directory Scanner (GitHub API + Session Cache)
+      async function autoScanDirectory(dirPath) {
+        const cleanPath = dirPath.replace(/^\/+|\/+$/g, '');
+        const cacheKey = `epw_slides_${cleanPath}`;
+
+        // Check session cache first
+        try {
+          const cached = sessionStorage.getItem(cacheKey);
+          if (cached) {
+            const parsed = JSON.parse(cached);
+            if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+          }
+        } catch (e) {}
+
+        try {
+          const apiUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/${cleanPath}`;
+          const res = await fetch(apiUrl);
+          if (!res.ok) throw new Error(`GitHub API returned ${res.status}`);
+
+          const items = await res.json();
+          const validExtensions = /\.(jpe?g|png|webp|gif|avif)$/i;
+
+          const images = items
+            .filter(item => item.type === 'file' && validExtensions.test(item.name))
+            .map(item => dirPath.replace(/\/+$/, '') + '/' + item.name);
+
+          if (images.length > 0) {
+            try { sessionStorage.setItem(cacheKey, JSON.stringify(images)); } catch (e) {}
+            return images;
+          }
+        } catch (err) {
+          console.warn("[EPW Slideshow Scanner] Notice:", err.message, "— Using repository fallbacks.");
+        }
+
+        // Return local fallbacks if offline or API unavailable
+        return LOCAL_FALLBACKS;
+      }
+
+      // 3. Sorting & Randomization Engine
+      function orderImages(list) {
+        const copy = [...list];
+        const isRandom = Boolean(SLIDESHOW_RANDOM && SLIDESHOW_RANDOM !== '0' && SLIDESHOW_RANDOM !== 'false');
+
+        if (isRandom) {
+          // Fisher-Yates Shuffle
+          for (let i = copy.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [copy[i], copy[j]] = [copy[j], copy[i]];
+          }
+          return copy;
+        }
+
+        // Natural Alphabetical Sort
+        return copy.sort((a, b) => {
+          const nameA = a.split('/').pop().toLowerCase();
+          const nameB = b.split('/').pop().toLowerCase();
+          return nameA.localeCompare(nameB, undefined, { numeric: true, sensitivity: 'base' });
+        });
+      }
+
+      // 4. Resolve Active Transition Effect
+      function getActiveEffect() {
+        const effectsPool = ['fade', 'slide', 'zoom', 'flip'];
+        let config = SLIDESHOW_TRANSITION_EFFECTS;
+
+        if (Array.isArray(config)) {
+          if (config.includes('random')) {
+            const choices = config.filter(e => e !== 'random');
+            const pool = choices.length > 0 ? choices : effectsPool;
+            return pool[Math.floor(Math.random() * pool.length)];
+          }
+          return config[0] || 'fade';
+        }
+
+        if (config === 'random') {
+          return effectsPool[Math.floor(Math.random() * effectsPool.length)];
+        }
+
+        return config || 'fade';
+      }
+
+      // 5. Render Slides and Thumbnails
+      function buildDOM() {
+        track.innerHTML = '';
+        if (thumbsContainer) thumbsContainer.innerHTML = '';
+
+        slideImages.forEach((src, idx) => {
+          // Slide Image
+          const img = document.createElement('img');
+          img.src = src;
+          img.alt = `EuroPartsWest Showcase ${idx + 1}`;
+          img.className = `slide-item ${idx === 0 ? 'active' : ''}`;
+          img.dataset.index = idx;
+          track.appendChild(img);
+
+          // Thumbnail
+          if (Boolean(SLIDESHOW_SHOW_THUMBS) && thumbsContainer) {
+            const thumb = document.createElement('img');
+            thumb.src = src;
+            thumb.alt = `Thumb ${idx + 1}`;
+            thumb.className = `slideshow-thumb ${idx === 0 ? 'active' : ''}`;
+            thumb.addEventListener('click', () => goToSlide(idx));
+            thumbsContainer.appendChild(thumb);
+          }
+        });
+      }
+
+      // 6. Navigation Logic
+      function goToSlide(newIndex, direction = 'next') {
+        if (slideImages.length === 0) return;
+
+        const slides = track.querySelectorAll('.slide-item');
+        const thumbs = thumbsContainer ? thumbsContainer.querySelectorAll('.slideshow-thumb') : [];
+        const prevIndex = currentIndex;
+        currentIndex = (newIndex + slideImages.length) % slideImages.length;
+
+        const effect = getActiveEffect();
+
+        slides.forEach((slide, idx) => {
+          slide.className = `slide-item effect-${effect}`;
+          if (idx === currentIndex) {
+            slide.classList.add('active');
+          } else if (idx === prevIndex && effect === 'slide') {
+            slide.classList.add(direction === 'next' ? 'prev-out' : '');
+          }
+        });
+
+        // Update Thumbnails
+        thumbs.forEach((thumb, idx) => {
+          thumb.classList.toggle('active', idx === currentIndex);
+          if (idx === currentIndex) {
+            thumb.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+          }
+        });
+      }
+
+      function nextSlide() { goToSlide(currentIndex + 1, 'next'); }
+      function prevSlide() { goToSlide(currentIndex - 1, 'prev'); }
+
+      // 7. Auto-Timer Management
+      function startTimer() {
+        stopTimer();
+        const interval = Number(SLIDESHOW_SPEED) || 3000;
+        timer = setInterval(() => {
+          if (!isPaused) nextSlide();
+        }, interval);
+      }
+
+      function stopTimer() {
+        if (timer) clearInterval(timer);
+      }
+
+      // 8. Event Listeners (Double Chevrons, Hover, Touch)
+      function initEvents() {
+        const btnNext = document.getElementById('slideNext');
+        const btnPrev = document.getElementById('slidePrev');
+
+        if (btnNext) btnNext.addEventListener('click', () => { nextSlide(); startTimer(); });
+        if (btnPrev) btnPrev.addEventListener('click', () => { prevSlide(); startTimer(); });
+
+        if (Boolean(SLIDESHOW_PAUSE_ON_HOVER) && container) {
+          container.addEventListener('mouseenter', () => { isPaused = true; });
+          container.addEventListener('mouseleave', () => { isPaused = false; });
+        }
+
+        // Mobile Touch Gestures
+        let touchStartX = 0;
+        container.addEventListener('touchstart', (e) => {
+          touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        container.addEventListener('touchend', (e) => {
+          const touchEndX = e.changedTouches[0].screenX;
+          const diff = touchStartX - touchEndX;
+          if (Math.abs(diff) > 40) {
+            if (diff > 0) nextSlide();
+            else prevSlide();
+            startTimer();
+          }
+        }, { passive: true });
+      }
+
+      // 9. Background Preloader
+      function preloadImages(list) {
+        list.forEach(src => {
+          const pre = new Image();
+          pre.src = src;
+        });
+      }
+
+      // 10. Bootstrap
+      async function init() {
+        const targetDir = resolveTargetDirectory();
+        const rawList = await autoScanDirectory(targetDir);
+
+        slideImages = orderImages(rawList);
+
+        if (slideImages.length > 0) {
+          buildDOM();
+          initEvents();
+          preloadImages(slideImages);
+          startTimer();
+        } else if (loadingLabel) {
+          loadingLabel.textContent = 'No images found.';
+        }
+      }
+
+      init();
+    })();
+  </script>
 
 </body>
 </html>

@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Euro Parts West : European Parts Distribution and Design</title>
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <meta name="description" content="Welcome to EP-West, the European Repair Specialist's complete source for auto parts. High quality German, Italian, Swedish, and British vehicle coverage." />
+  
+  <!-- Global Stylesheet & Fonts -->
+  <link rel="stylesheet" href="assets/css/styles.css?v=1.3">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* Reset & Base Setup */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: 'Inter', Arial, Helvetica, sans-serif;
+      font-size: 15px;
+      line-height: 1.5;
+      color: #f2f2f2;
+      /* Carbon fiber woven pattern */
+      background-color: #202426;
+      background-image: 
+        radial-gradient(rgba(0, 0, 0, 0.75) 15%, transparent 16%),
+        radial-gradient(rgba(0, 0, 0, 0.75) 15%, transparent 16%),
+        radial-gradient(rgba(255, 255, 255, 0.08) 15%, transparent 20%),
+        radial-gradient(rgba(255, 255, 255, 0.08) 15%, transparent 20%);
+      background-size: 16px 16px;
+      background-position: 0 0, 8px 8px, 0 1px, 8px 9px;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    /* Page Content Wrapper */
+    .page-wrapper {
+      width: 100%;
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 45px 20px 30px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1;
+    }
+
+    a {
+      color: #e52521;
+      text-decoration: none;
+      transition: color 0.15s ease-in-out;
+    }
+
+    a:hover {
+      text-decoration: underline;
+      color: #ff4d4a;
+    }
+
+    .red-accent {
+      color: #e52521;
+    }
+
+    /* Top Two-Column Header Block */
+    .hero-grid {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      column-gap: 50px;
+      row-gap: 30px;
+      align-items: start;
+      margin-bottom: 55px;
+    }
+
+    /* Left Column: Logo & Intro */
+    .hero-left {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .hero-logo-wrap {
+      width: 100%;
+      max-width: 480px;
+      margin-bottom: 18px;
+    }
+
+    .hero-logo-wrap img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .hero-subtitle-primary {
+      font-size: 16px;
+      font-weight: bold;
+      color: #ffffff;
+      margin-bottom: 3px;
+    }
+
+    .hero-subtitle-secondary {
+      font-size: 15px;
+      font-style: italic;
+      color: #f0f0f0;
+      margin-bottom: 16px;
+    }
+
+    .hero-intro-copy {
+      font-size: 14.5px;
+      line-height: 1.45;
+      color: #ececec;
+      max-width: 470px;
+      text-align: center;
+    }
+
+    /* Right Column: Contact & Team */
+    .hero-right {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      gap: 20px;
+      padding-top: 5px;
+      padding-left: 20px;
+    }
+
+    .contact-card {
+      font-size: 14.5px;
+      line-height: 1.4;
+    }
+
+    .contact-card .card-title {
+      font-weight: bold;
+      color: #ffffff;
+      font-size: 15px;
+    }
+
+    .contact-card .card-subtitle {
+      color: #e0e0e0;
+    }
+
+    /* Middle Section: Inquiry Box */
+    .inquiry-block {
+      text-align: center;
+      margin-bottom: 50px;
+      max-width: 900px;
+      padding: 0 15px;
+    }
+
+    .inquiry-title {
+      font-size: 15px;
+      font-weight: bold;
+      color: #ffffff;
+      margin-bottom: 4px;
+    }
+
+    .inquiry-desc {
+      font-size: 14px;
+      color: #e8e8e8;
+    }
+
+    /* Technical Partners Section */
+    .partners-section {
+      width: 100%;
+      max-width: 980px;
+      text-align: center;
+      margin-bottom: 55px;
+    }
+
+    .partners-heading {
+      font-size: 15px;
+      font-weight: bold;
+      color: #ffffff;
+      margin-bottom: 24px;
+    }
+
+    .partners-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      row-gap: 16px;
+      column-gap: 15px;
+      font-size: 13.5px;
+      align-items: center;
+    }
+
+    .partners-grid a,
+    .partners-grid span {
+      color: #e52521;
+      white-space: nowrap;
+    }
+
+    /* Logistics / Tracking Section */
+    .logistics-block {
+      text-align: center;
+      margin-bottom: 50px;
+      font-size: 14.5px;
+      line-height: 1.6;
+    }
+
+    .logistics-title {
+      font-weight: bold;
+      color: #ffffff;
+      margin-top: 14px;
+      margin-bottom: 2px;
+    }
+
+    .tracking-links a {
+      font-weight: bold;
+      padding: 0 3px;
+    }
+
+    .tracking-separator {
+      color: #f2f2f2;
+      padding: 0 4px;
+    }
+
+    /* Footer */
+    footer {
+      width: 100%;
+      text-align: center;
+      font-size: 12px;
+      color: #a0a0a0;
+      padding: 25px 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      background: transparent;
+      margin-top: auto;
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 860px) {
+      .hero-grid {
+        grid-template-columns: 1fr;
+        row-gap: 40px;
+      }
+      .hero-right {
+        padding-left: 0;
+        text-align: center;
+        align-items: center;
+      }
+      .partners-grid {
+        grid-template-columns: repeat(3, 1fr);
+        row-gap: 14px;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .partners-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .page-wrapper {
+        padding: 30px 14px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sticky Site Navigation Header -->
+  <header>
+    <nav class="container">
+      <div class="logo">
+        <a href="index.html">
+          <img src="assets/images/EURO-PARTS-WEST-logo-720-v1911.gif" alt="EuroPartsWest">
+        </a>
+      </div>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="https://www.ebay.com/str/europartswestllc" target="_blank" rel="noopener noreferrer">eBay Store</a></li>
+        <li><a href="inquiry.html">Inquiry</a></li>
+        <li><a href="contact.html">Contact</a></li>
+      </ul>
+      <button id="themeToggle" class="theme-toggle" aria-label="Toggle dark mode">
+        <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+      </button>
+    </nav>
+  </header>
+
+  <div class="page-wrapper">
+    <!-- Top Two-Column Content Block -->
+    <section class="hero-grid">
+      <!-- Left Column: EPW Crest Logo & Welcome Blurb -->
+      <div class="hero-left">
+        <div class="hero-logo-wrap">
+          <img 
+            src="assets/images/EURO-PARTS-WEST-logo-720-v1911.gif" 
+            alt="Euro Parts West LLC Logo" 
+          />
+        </div>
+        <div class="hero-subtitle-primary">European Auto Parts Distribution &amp; Design</div>
+        <div class="hero-subtitle-secondary">Quality proven, value superior.</div>
+        <p class="hero-intro-copy">
+          Welcome to EP-West, the European Repair Specialist's complete source for auto
+          parts. We provide a comprehensive, quality parts coverage for German, Italian,
+          Swedish and British vehicles worldwide at an excellent value.
+        </p>
+      </div>
+
+      <!-- Right Column: Business Coordinates, Phone & Key Staff -->
+      <div class="hero-right">
+        <!-- Address & Map Link -->
+        <div class="contact-card">
+          <div class="card-title">Euro Parts West, LLC.</div>
+          <div>7905 E. Greenway RD. Bld. 202</div>
+          <div>Scottsdale, Arizona 85260 USA</div>
+          <div style="margin-top: 8px;">
+            <a href="https://maps.google.com/?q=7905+E.+Greenway+RD.+Bld.+202,+Scottsdale,+AZ+85260" target="_blank" rel="noopener noreferrer">
+              Click for <strong>LOCATION MAP</strong>
+            </a>
+          </div>
+          <div class="red-accent" style="font-size: 13.5px;">
+            Located on the West side of Scottsdale Air Park.
+          </div>
+        </div>
+
+        <!-- Phone & General Inquiries -->
+        <div class="contact-card">
+          <div class="card-title">+1 (844) URO-PART</div>
+          <div>
+            <a href="mailto:sales@europartswest.com">sales@europartswest.com</a>
+          </div>
+        </div>
+
+        <!-- Brian M. Day -->
+        <div class="contact-card">
+          <div class="card-title">Brian M. Day</div>
+          <div class="card-subtitle">Parts Specialist / Motorsport Design Engineer</div>
+          <div class="card-subtitle">PORSCHE &amp; Motorsport Specialist North America</div>
+          <div>
+            <a href="mailto:day@europartswest.com">day@europartswest.com</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Center Section: Product Inquiry Prompt -->
+    <section class="inquiry-block">
+      <div class="inquiry-title">Product Inquiry / Professional Estimates:</div>
+      <div class="inquiry-desc">
+        Please include the part number, discription of your project, year, make, model and VIN number if available.
+        <div style="margin-top: 14px;">
+          <a href="inquiry.html" class="btn" style="padding: 9px 22px; font-size: 0.95rem;">Open Inquiry Form &rarr;</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Technical Partners Grid -->
+    <section class="partners-section">
+      <div class="partners-heading">Technical Partners:</div>
+      <div class="partners-grid">
+        <!-- Row 1 -->
+        <span>Aasco Motorsports</span>
+        <span>Bilstein</span>
+        <span>Cargraphic</span>
+        <span>CSF</span>
+        <span>Dansk</span>
+        <span>EVOMS</span>
+
+        <!-- Row 2 -->
+        <span>Endless</span>
+        <span>EXE-TC</span>
+        <span>FVD</span>
+        <span>Giro Disc</span>
+        <span>KEP</span>
+        <span>MODE Inc.</span>
+
+        <!-- Row 3 -->
+        <span>PORSCHE Motorsport</span>
+        <span>Setrab USA</span>
+        <span>The Porschaholic</span>
+        <span>TurboKraft</span>
+        <span>Wurth</span>
+        <span>ZF | Sachs Performance</span>
+      </div>
+    </section>
+
+    <!-- Shipping & Order Tracking -->
+    <section class="logistics-block">
+      <div>Our parts department ships packages &amp; freight worldwide Monday-Friday</div>
+      <div class="logistics-title">Order Tracking &amp; Information:</div>
+      <div class="tracking-links">
+        <a href="https://www.dhl.com/" target="_blank" rel="noopener noreferrer">DHL</a>
+        <span class="tracking-separator">/</span>
+        <a href="https://www.fedex.com/" target="_blank" rel="noopener noreferrer">FedEx</a>
+        <span class="tracking-separator">/</span>
+        <a href="https://www.ups.com/" target="_blank" rel="noopener noreferrer">UPS</a>
+        <span class="tracking-separator">/</span>
+        <a href="https://www.usps.com/" target="_blank" rel="noopener noreferrer">USPS</a>
+      </div>
+    </section>
+  </div>
+
+  <!-- Copyright Footer -->
+  <footer>
+    <div class="container">
+      <p>&copy; 2026 Euro Parts West, LLC. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- App Script for Dark/Light Theme Switching -->
+  <script src="assets/js/app.js"></script>
+
+  <script src="https://widgets.leadconnectorhq.com/loader.js" 
+    data-resources-url="https://widgets.leadconnectorhq.com/chat-widget/loader.js" 
+    data-widget-id="6aac1b9dce16b8058881fe32"></script>
+
+</body>
+</html>

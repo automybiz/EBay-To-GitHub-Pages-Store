@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Slideshow images
     const slides = [
-        'assets/img/slideshow/ebay-banner.jpg',
+        'assets/images/slideshow/ebay-banner.jpg',
         'https://i.ebayimg.com/images/g/zFoAAOSwq9FoUfPJ/s-l1600.jpg',
         'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=1200',
         'https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?auto=format&fit=crop&q=80&w=1200'
