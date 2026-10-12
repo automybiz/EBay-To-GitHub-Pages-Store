@@ -1,0 +1,5 @@
+# Uploads from the Sveltia CMS image widgets land here.
+#
+# `media_folder: public/images/products` + `public_folder: /images/products` in
+# public/admin/config.yml, so files uploaded in /admin/ are written to this
+# directory and referenced from the front matter as /images/products/<file>.

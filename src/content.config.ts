@@ -15,6 +15,13 @@ const products = defineCollection({
     title: z.string(),
     sku: z.string(),
     description: z.string().default(''),
+    /**
+     * Root-relative path written by the CMS image widget, e.g.
+     * `/images/products/oil-cooler.jpg` (uploads land in `public/images/products`).
+     * A plain string rather than Astro's `image()` helper, because the files are
+     * served straight out of `public/` rather than processed from `src/`.
+     */
+    image: z.string().optional(),
     price: z.coerce.number().nonnegative().default(0),
     stock: z.coerce.number().int().nonnegative().default(0),
     /**
@@ -28,6 +35,8 @@ const products = defineCollection({
           variant_sku: z.string(),
           variant_price: z.coerce.number().nonnegative().default(0),
           variant_stock: z.coerce.number().int().nonnegative().default(0),
+          /** Optional photo shown when this option is selected. */
+          variant_image: z.string().optional(),
         })
       )
       .default([]),

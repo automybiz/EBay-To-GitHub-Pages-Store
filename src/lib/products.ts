@@ -13,6 +13,8 @@ export interface StoreVariant {
   /** Pre-formatted, e.g. "$99.50". */
   priceLabel: string | null;
   stock: number | null;
+  /** Optional photo for this option; swapped into the gallery on the product page. */
+  image: string | null;
 }
 
 /**
@@ -149,7 +151,12 @@ async function fromDirect(): Promise<StoreProduct[]> {
       price: variant.variant_price,
       priceLabel: formatPrice(variant.variant_price, 'USD'),
       stock: variant.variant_stock,
+      image: variant.variant_image ?? null,
     }));
+
+    // The CMS uploads into public/images/products and stores a root-relative
+    // path, so the value can be used as an <img src> directly.
+    const image = data.image ?? null;
 
     // With options on offer the headline figure is the cheapest one — and the
     // stock belongs to the options rather than to the parent record.
@@ -178,8 +185,8 @@ async function fromDirect(): Promise<StoreProduct[]> {
       price,
       currency: 'USD',
       priceLabel,
-      image: null,
-      images: [],
+      image,
+      images: image ? [image] : [],
       url: null,
       brand: null,
       condition: null,

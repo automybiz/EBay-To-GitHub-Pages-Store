@@ -109,11 +109,17 @@ const stockLabel =
       ? 'Available'
       : 'Check availability';
 
-// Primary image first, then the full de-duplicated gallery. Direct products
-// have no photos at all, so this can legitimately be empty.
-const gallery = (product.images.length ? product.images : [product.image]).filter(
-  (src): src is string => Boolean(src)
-);
+// Primary image first, then the full de-duplicated gallery. When a product has
+// no photo of its own we fall back to the first variant that has one, so the
+// main <img> exists and the variant switcher has something to swap. This can
+// still legitimately end up empty, in which case a placeholder is rendered.
+const firstVariantImage = variants.find((variant) => variant.image)?.image ?? null;
+const gallery = (
+  product.images.length ? product.images : [product.image ?? firstVariantImage]
+).filter((src): src is string => Boolean(src));
+
+// Shown again when a variant without its own photo is selected.
+const primaryImageSrc = gallery[0] ?? null;
 
 // Full Technical Specs table, straight from `item.specifics`.
 const specifics = Object.entries(product.specifics)
@@ -150,7 +156,12 @@ const descriptionHtml = product.descriptionIsHtml
         <div class="gallery-main">
           {
             gallery.length > 0 ? (
-              <img id="galleryMain" src={gallery[0]} alt={product.title} />
+              <img
+                id="galleryMain"
+                src={gallery[0]}
+                data-primary-image={primaryImageSrc ?? ''}
+                alt={product.title}
+              />
             ) : (
               <div class="gallery-placeholder">
                 <span>EuroPartsWest</span>
@@ -213,6 +224,7 @@ const descriptionHtml = product.descriptionIsHtml
                     class:list={['variant-pill', { active: index === 0 }]}
                     data-variant-sku={variant.sku}
                     data-variant-price={variant.priceLabel ?? ''}
+                    data-variant-image={variant.image ?? ''}
                     aria-pressed={index === 0 ? 'true' : 'false'}
                   >
                     <span class="variant-name">{variant.optionName}</span>
@@ -692,19 +704,21 @@ const descriptionHtml = product.descriptionIsHtml
 
   // --- Variant selector -------------------------------------------------------
   // The first option is already selected in the server-rendered markup, so this
-  // only has to swap the price, the SKU and the `part_no` on the two action
-  // links whenever a different pill is clicked.
+  // only has to react to clicks: swap the price, the SKU, the `part_no` on both
+  // action links, and the main photo when the option ships its own image.
   const priceEl = document.getElementById('detailPrice');
   const skuEl = document.getElementById('detailSku');
   const pills = Array.from(document.querySelectorAll<HTMLButtonElement>('.variant-pill'));
   const hrefTargets = Array.from(
     document.querySelectorAll<HTMLAnchorElement>('[data-href-template]')
   );
+  const productImageSrc = mainImage?.dataset.primaryImage ?? '';
 
   for (const pill of pills) {
     pill.addEventListener('click', () => {
       const sku = pill.dataset.variantSku ?? '';
       const price = pill.dataset.variantPrice;
+      const variantImage = pill.dataset.variantImage ?? '';
 
       if (priceEl && price) priceEl.textContent = price;
       if (skuEl && sku) skuEl.textContent = sku;
@@ -712,6 +726,17 @@ const descriptionHtml = product.descriptionIsHtml
       for (const link of hrefTargets) {
         const template = link.dataset.hrefTemplate;
         if (template) link.href = template + encodeURIComponent(sku);
+      }
+
+      // Show the option's own photo, or fall back to the product's primary one
+      // when the option doesn't have an image of its own.
+      if (mainImage && productImageSrc) {
+        mainImage.src = variantImage || productImageSrc;
+        // A variant photo isn't one of the gallery thumbnails, so only the
+        // primary image keeps a thumbnail highlighted.
+        for (const [index, thumb] of thumbs.entries()) {
+          thumb.classList.toggle('active', !variantImage && index === 0);
+        }
       }
 
       for (const other of pills) {

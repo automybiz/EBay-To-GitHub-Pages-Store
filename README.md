@@ -68,8 +68,17 @@ Git-based editor that commits straight to this repository.
 | `src/content/products/` | Where entries are written, one `.md` file per SKU |
 
 **Collection:** `Products` → `src/content/products/<sku>.md`, with `title`, `sku`,
-`description`, `price`, `stock`, and a **Variants** list. Each variant carries
-**Variant Option Name**, **SKU**, **Price** and **Stock**.
+`description`, **Primary Product Image**, `price`, `stock`, and a **Variants** list.
+Each variant carries **Variant Option Name**, **SKU**, **Price**, **Stock** and an
+optional **Variant Image**.
+
+Uploads land in `public/images/products/` and are stored as root-relative paths
+(`/images/products/…`), so they are used as `<img src>` directly:
+
+* the **primary image** becomes the product card thumbnail on `/store` and the main
+  photo on the product page (products without one fall back to the placeholder);
+* a **variant image** is swapped into the main photo when that option is selected,
+  and the product's primary photo returns when an option has no image of its own.
 
 ### Editing locally
 
