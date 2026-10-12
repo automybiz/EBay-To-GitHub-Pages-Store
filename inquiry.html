@@ -36,11 +36,12 @@
         /* Brief highlight flash for parts added/updated via URL prefill (GET variables) */
         @keyframes epwPartFlash {
             0%   { box-shadow: 0 0 0 3px var(--epw-flash-color, #FA0), 0 0 22px 6px var(--epw-flash-color, #FA0); }
-            60%  { box-shadow: 0 0 0 2px var(--epw-flash-color, #FA0), 0 0 14px 3px var(--epw-flash-color, #FA0); }
+            45%  { box-shadow: 0 0 0 2px var(--epw-flash-color, #FA0), 0 0 14px 3px var(--epw-flash-color, #FA0); }
+            60%  { box-shadow: 0 2px 6px rgba(0,0,0,0.3); }
             100% { box-shadow: 0 2px 6px rgba(0,0,0,0.3); }
         }
         .inquiry-form-container .part-block.epw-flash-new {
-            animation: epwPartFlash 1.2s ease-out 1;
+            animation: epwPartFlash 2s ease-out infinite;
         }
         @media (prefers-reduced-motion: reduce) {
             .inquiry-form-container .part-block.epw-flash-new { animation: none; }
@@ -863,9 +864,9 @@
         const STICKY_FIELDS_ITEMS_TOGGLE = false;
 
         // Brief highlight flash for parts added/updated via URL prefill (GET variables)
-        const BRIEF_HIGHLIGHT_FLASH_LENGTH = 10000;   // ms — glow duration for a newly added/updated part row
-        const BRIEF_HIGHLIGHT_FLASH_INTERVAL = 2000; // ms — interval between flashes
-        const BRIEF_HIGHLIGHT_FLASH_COLOR = '#FA0';  // Shorthand (or full) HEX color for the flash glow
+        const BRIEF_HIGHLIGHT_FLASH_LENGTH = 10;    // seconds — total time the highlight keeps flashing
+        const BRIEF_HIGHLIGHT_FLASH_INTERVAL = 2;   // seconds — one glow pulse every INTERVAL (time between flashes)
+        const BRIEF_HIGHLIGHT_FLASH_COLOR = '#FA0'; // Shorthand (or full) HEX color for the flash glow
 
         // State Management
         let vehicles = [];
@@ -1112,20 +1113,32 @@
         }
 
         // Briefly glow the given part blocks so the user sees what the link did.
+        // Each row pulses once every BRIEF_HIGHLIGHT_FLASH_INTERVAL seconds, and keeps
+        // pulsing for BRIEF_HIGHLIGHT_FLASH_LENGTH seconds in total (both in seconds).
         function flashParts(ids) {
             if (!ids || !ids.length) return;
             if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
             document.documentElement.style.setProperty('--epw-flash-color', BRIEF_HIGHLIGHT_FLASH_COLOR);
 
+            const intervalSeconds = Math.max(0.2, BRIEF_HIGHLIGHT_FLASH_INTERVAL);
+            const lengthSeconds = Math.max(intervalSeconds, BRIEF_HIGHLIGHT_FLASH_LENGTH);
+            // One full pulse per interval, for as many intervals as fit in the length.
+            const pulseCount = Math.max(1, Math.round(lengthSeconds / intervalSeconds));
+
             ids.forEach(id => {
                 const el = vehiclesContainer.querySelector(`.part-block[data-part-id="${id}"]`);
                 if (!el) return;
-                el.style.animationDuration = BRIEF_HIGHLIGHT_FLASH_LENGTH + 'ms';
+                el.style.animationDuration = intervalSeconds + 's';
+                el.style.animationIterationCount = String(pulseCount);
                 el.classList.remove('epw-flash-new');
                 void el.offsetWidth; // force reflow so the animation can restart if needed
                 el.classList.add('epw-flash-new');
-                setTimeout(() => el.classList.remove('epw-flash-new'), BRIEF_HIGHLIGHT_FLASH_LENGTH + 150);
+                setTimeout(() => {
+                    el.classList.remove('epw-flash-new');
+                    el.style.animationDuration = '';
+                    el.style.animationIterationCount = '';
+                }, lengthSeconds * 1000 + 150);
             });
         }
 
