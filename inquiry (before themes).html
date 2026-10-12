@@ -1053,11 +1053,10 @@
         inquiryForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            // 1. HONEYPOT CHECK: If middle_name has any value, drop silently and trigger confirmation screen
+            // 1. HONEYPOT CHECK
             const honeypot = document.getElementById('middle_name');
             if (honeypot && honeypot.value.trim() !== '') {
                 console.warn("Spam bot trapped via middle_name honeypot.");
-                // Switch container to zero-padding submitted mode and show success box
                 document.querySelector('.inquiry-form-container').classList.add('submitted');
                 inquiryForm.style.display = 'none';
                 document.querySelector('.inquiry-form-container .header').style.display = 'none';
@@ -1071,13 +1070,11 @@
             vehicles.forEach((v, index) => {
                 const vehicleName = v.name || `Vehicle ${index + 1}`;
                 
-                // Ensure at least one part name
                 const hasPartName = v.parts.some(p => p.name && p.name.trim().length > 0);
                 if (!hasPartName) {
                     errors.push(`Please enter at least one part name for ${vehicleName}.`);
                 }
                 
-                // Quantity bounds
                 v.parts.forEach((p) => {
                     if (p.qty < 1) {
                         errors.push(`Quantity for part "${p.name || 'Unnamed'}" in ${vehicleName} must be at least 1.`);
@@ -1087,7 +1084,6 @@
                     }
                 });
 
-                // VIN Length & Character Check
                 const rawVin = (v.vin || '').trim();
                 if (rawVin.length > 0) {
                     const cleanVin = rawVin.replace(/[\s-]/g, '');
@@ -1112,6 +1108,15 @@
             formData.delete('middle_name');
             
             const data = Object.fromEntries(formData.entries());
+
+            // 💡 UTF-8 Safe Base64 Envelope: Stops GHL from auto-parsing raw_payload into a folder
+            const jsonString = JSON.stringify(data);
+            const base64String = btoa(unescape(encodeURIComponent(jsonString)));
+
+            const payload = {
+                ...data, // Keep native keys for GHL contact mapping & workflows
+                raw_payload: base64String // 👈 Transports entire form in 1 un-mangled flat string!
+            };
             
             const webhookUrl = 'https://services.leadconnectorhq.com/hooks/A9eEmuUJ1FM6sBhYESfO/webhook-trigger/6bdeea4e-6b4e-49f7-afef-dd77d3bd3dfd';
 
@@ -1126,7 +1131,7 @@
                     headers: { 
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(data)
+                    body: JSON.stringify(payload)
                 });
 
                 if (response.ok) {

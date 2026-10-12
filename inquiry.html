@@ -10,10 +10,27 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=BioRhyme:wght@300;400;700&display=swap" rel="stylesheet">
+    
+    <!-- Instant Head Pre-Hydration to prevent FOUC (Flash of Unstyled Content) -->
+    <script>
+        (function() {
+            try {
+                var cachedThemeCss = localStorage.getItem('epw_live_theme_css');
+                if (cachedThemeCss) {
+                    var styleEl = document.createElement('style');
+                    styleEl.id = 'epwDynamicThemeStyles';
+                    styleEl.textContent = cachedThemeCss;
+                    document.head.appendChild(styleEl);
+                }
+            } catch (e) {}
+        })();
+    </script>
+
     <style>
         .inquiry-content {
             padding: 10px 0px;
-            background-color: var(--bg-color);
+            background-color: var(--page-bg, var(--bg-color, #111));
+            transition: background-color 0.25s ease;
         }
     </style>
 </head>
@@ -45,62 +62,81 @@
             <div class="container">
                 <!-- EMBEDDED FORM SNIPPET START -->
                 
-<style>
+<style id="epwThemeStylesFallback">
     :root {
-        --primary: #c8102e; /* Red */
-        --blue: #0056b3; /* Blue for Add buttons and lines */
-        --secondary: #333;
-        --light: #f4f4f4;
-        --dark: #1a1a1a;
-        --white: #ffffff;
-        --grey: #888;
-        --border: #ddd;
-        --shadow: 0 4px 6px rgba(0,0,0,0.1);
+        --page-bg: #100;
+        --form-bg: #100;
+        --form-border: #D12;
+        --form-text: #FFF;
+        --form-subtext: #AAA;
+        --form-title-color: #FA0;
+        
+        --input-label-color: #FA0;
+        --input-bg-color: #100;
+        --input-font-color: #FFF;
+        --input-border-color: #411;
+        --input-border-color-focused: #FA0;
 
-        /* Semantic Input Variables */
-        --input-font-color: var(--secondary);
-        --input-bg-color: #ffffff;
-        --input-label-color: var(--secondary);
-        --input-border-color: #009999;
-        --input-border-color-focused: #00FFFF;
-        --submit-button-bg-color: #0056b3;
-    }
+        --card-box-bg: #201;
+        --card-box-border: #D12;
 
-    [data-theme="dark"] {
-        --input-font-color: #ffffff;
-        --input-bg-color: #2d2d2d;
-        --input-label-color: #e0e0e0;
+        /* Table Style Tokens for Parts Block */
+        --table-bg-1: #100;
+        --table-bg-2: #210;
+        --table-bg-3: #301;
+        --table-border: #D12;
+
+        --btn-action-bg: #301;
+        --btn-action-border: #D12;
+        --btn-action-text: #FD0;
+
+        --submit-button-bg-color: #D12;
+        --submit-button-border-color: #FA0;
+        --submit-button-text-color: #FFF;
+
+        --summary-card-bg: #201;
+        --summary-card-border: #D12;
+        --summary-card-header: #301;
+        --summary-card-title: #FA0;
+        --summary-pill-bg: #301;
+        --summary-pill-text: #F99;
+        --summary-pill-border: #D12;
+
+        --diy-bg: rgba(69, 10, 10, 0.4);
+        --diy-border: #D12;
+        --diy-text: #FFF;
+
+        --terms-bg: rgba(69, 10, 10, 0.25);
+        --terms-border: #411;
+        --terms-text: #AAA;
+
+        --shadow: 0 8px 30px rgba(0, 0, 0, 0.7);
     }
 
     /* Form Specific Styles */
     .inquiry-form-container {
         max-width: 100%;
         margin: 0px auto;
-        background: var(--white);
-        padding: 30px 20px; /* Form view padding */
+        background: var(--form-bg);
+        border: 1.5px solid var(--form-border);
+        padding: 30px 20px 0px; /* Streamlined bottom padding */
         border-radius: 8px;
         box-shadow: var(--shadow);
-        color: var(--secondary);
+        color: var(--form-text);
         text-align: left;
-        transition: padding 0.2s ease, background 0.2s ease;
+        transition: padding 0.2s ease, background 0.25s ease, border-color 0.25s ease;
     }
 
-    /* Confirmation State: Zero padding removes awkward double-box effect */
     .inquiry-form-container.submitted {
         padding: 0 !important;
         background: transparent !important;
         box-shadow: none !important;
-    }
-
-    [data-theme="dark"] .inquiry-form-container {
-        background: #1e1e1e;
-        color: #e0e0e0;
-        --border: #333;
+        border: none !important;
     }
 
     .inquiry-form-container .header {
         text-align: center;
-        margin-bottom: 40px;
+        margin-bottom: 30px;
         position: static;
         z-index: auto;
         top: auto;
@@ -110,8 +146,16 @@
     }
 
     .inquiry-form-container h1 {
-        font-size: 1.8rem;
+        font-size: 1.85rem;
         margin-bottom: 10px;
+        color: var(--form-title-color);
+        font-weight: 800;
+        letter-spacing: 0.5px;
+    }
+
+    .inquiry-form-container .header p {
+        color: var(--form-subtext);
+        line-height: 1.6;
     }
 
     .inquiry-form-container .form-group {
@@ -120,10 +164,12 @@
 
     .inquiry-form-container label {
         display: block;
-        font-weight: 600;
-        margin-bottom: 8px;
-        font-size: 0.9rem;
+        font-weight: 700;
+        margin-bottom: 6px;
+        font-size: 0.85rem;
         color: var(--input-label-color);
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
     }
 
     .inquiry-form-container input[type="text"],
@@ -133,14 +179,15 @@
     .inquiry-form-container select,
     .inquiry-form-container textarea {
         width: 100%;
-        padding: 12px;
-        border: 2px solid var(--input-border-color);
-        border-radius: 5px;
-        font-size: 1rem;
+        padding: 10px 12px;
+        border: 1.5px solid var(--input-border-color);
+        border-radius: 6px;
+        font-size: 0.95rem;
         font-family: inherit;
         color: var(--input-font-color);
         background-color: var(--input-bg-color);
         transition: border-color 0.2s, box-shadow 0.2s;
+        box-sizing: border-box;
     }
 
     .inquiry-form-container input:focus,
@@ -148,7 +195,7 @@
     .inquiry-form-container textarea:focus {
         outline: none;
         border-color: var(--input-border-color-focused);
-        box-shadow: 0 0 0 4px rgba(0, 255, 255, 0.25);
+        box-shadow: 0 0 0 3px rgba(250, 160, 0, 0.25);
     }
 
     .inquiry-form-container .row {
@@ -163,11 +210,12 @@
     }
 
     .inquiry-form-container .section-title {
-        font-size: 1.2rem;
-        font-weight: 700;
-        margin: 40px 0 20px;
+        font-size: 1.25rem;
+        font-weight: 800;
+        margin: 35px 0 20px;
         padding-bottom: 10px;
-        border-bottom: 2px solid var(--light);
+        border-bottom: 1.5px solid var(--form-border);
+        color: var(--form-title-color);
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -176,16 +224,12 @@
     }
 
     .inquiry-form-container .vehicle-block {
-        border: 1px solid var(--border);
-        padding: 25px;
-        border-radius: 10px;
-        margin-bottom: 25px;
-        background: #fafafa;
+        border: 1px solid var(--card-box-border);
+        padding: 22px;
+        border-radius: 8px;
+        margin-bottom: 22px;
+        background: var(--card-box-bg);
         position: relative;
-    }
-
-    [data-theme="dark"] .inquiry-form-container .vehicle-block {
-        background: #252525;
     }
 
     .inquiry-form-container .vehicle-top-bar {
@@ -201,60 +245,72 @@
         min-width: 260px;
     }
 
+    /* Luxury Form Parts Block: 11px Radius, Zero Margin, Curved Border, Table Alternation & Hover */
     .inquiry-form-container .part-block {
-        border-left: 4px solid var(--border);
-        padding: 15px 15px 5px 15px;
-        margin: 15px 0 15px 25px;
-        background: var(--white);
-        border-radius: 0 8px 8px 0;
+        border-left: 3px solid var(--table-border, var(--form-border));
+        padding: 14px 16px 8px 16px;
+        margin: 0;
+        border-radius: 11px;
         position: relative;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        transition: background-color 0.2s ease, border-color 0.2s ease;
     }
 
-    [data-theme="dark"] .inquiry-form-container .part-block {
-        background: #2d2d2d;
+    .inquiry-form-container .part-block:nth-child(odd) {
+        background: var(--table-bg-1, #100) !important;
+    }
+
+    .inquiry-form-container .part-block:nth-child(even) {
+        background: var(--table-bg-2, #210) !important;
+    }
+
+    .inquiry-form-container .part-block:hover {
+        background: var(--table-bg-3, #301) !important;
+        border-left-color: var(--form-title-color) !important;
     }
 
     .inquiry-form-container .btn {
-        display: inline-block;
-        background: var(--primary);
-        color: #ffffff !important;
-        padding: 10px 20px;
-        border: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--btn-action-bg);
+        color: var(--btn-action-text) !important;
+        border: 1px solid var(--btn-action-border);
+        padding: 8px 16px;
         border-radius: 5px;
-        font-weight: 600;
+        font-weight: 700;
         cursor: pointer;
-        transition: all 0.3s;
-        font-size: 0.9rem;
+        transition: all 0.2s ease;
+        font-size: 0.88rem;
         text-decoration: none;
     }
 
     .inquiry-form-container .btn:hover {
-        opacity: 0.9;
+        opacity: 0.95;
         transform: translateY(-1px);
-        color: #ffffff !important;
     }
 
     .inquiry-form-container .btn-blue {
-        background: var(--blue);
-        color: #ffffff !important;
+        background: var(--btn-action-bg);
+        border: 1px solid var(--btn-action-border);
+        color: var(--btn-action-text) !important;
     }
 
     .inquiry-form-container .btn-outline-blue {
         background: transparent;
-        border: 2px solid var(--blue);
-        color: var(--blue);
+        border: 1.5px solid var(--btn-action-text);
+        color: var(--btn-action-text) !important;
     }
 
     .inquiry-form-container .btn-outline-blue:hover {
-        background: var(--blue);
-        color: white;
+        background: var(--btn-action-bg);
     }
 
     .inquiry-form-container .btn-danger {
-        background: #dc3545;
-        color: #ffffff !important;
-        padding: 6px 12px;
+        background: #500;
+        border: 1px solid #F33;
+        color: #FAA !important;
+        padding: 5px 12px;
         font-size: 0.8rem;
     }
 
@@ -271,17 +327,16 @@
 
     .inquiry-form-container .remove-btn {
         position: absolute;
-        top: 9px;
-        right: 9px;
+        top: 8px;
+        right: 8px;
         z-index: 10;
         padding: 2px 8px;
-        font-size: 1rem;
+        font-size: 0.95rem;
         line-height: 1.2;
     }
 
-    /* Inquiry Summary Preview Container */
     .inquiry-form-container .summary-preview-wrap {
-        margin-top: 0px;
+        margin-top: 10px;
         border-radius: 8px;
         overflow: hidden;
     }
@@ -291,65 +346,77 @@
         display: flex;
         align-items: flex-start;
         gap: 12px;
-        background: rgba(0, 153, 153, 0.08);
-        border: 1px solid rgba(0, 153, 153, 0.3);
+        background: var(--diy-bg);
+        border: 1px solid var(--diy-border);
+        color: var(--diy-text);
         padding: 14px 16px;
         border-radius: 6px;
     }
 
-    [data-theme="dark"] .inquiry-form-container .diy-group {
-        background: rgba(0, 229, 255, 0.06);
-        border-color: rgba(0, 229, 255, 0.25);
-    }
-
     .inquiry-form-container .diy-group input[type="checkbox"] {
-        margin-top: 4px;
+        margin-top: 3px;
         width: 18px;
         height: 18px;
         cursor: pointer;
-        accent-color: var(--blue);
+        accent-color: var(--form-title-color);
     }
 
     .inquiry-form-container .diy-group label {
         margin-bottom: 0;
-        font-size: 0.95rem;
+        font-size: 0.92rem;
         cursor: pointer;
         line-height: 1.4;
+        color: var(--diy-text);
+        text-transform: none;
+        font-weight: 500;
     }
 
     .inquiry-form-container .terms-group {
-        margin: 10px 0 20px 0;
+        margin: 12px 0 20px 0;
         display: flex;
         align-items: flex-start;
         gap: 12px;
-        background: rgba(200, 16, 46, 0.05);
+        background: var(--terms-bg);
+        border: 1px solid var(--terms-border);
+        color: var(--terms-text);
         padding: 15px;
-        border-radius: 5px;
+        border-radius: 6px;
     }
 
     .inquiry-form-container .terms-group input {
-        margin-top: 5px;
+        margin-top: 4px;
         width: 18px;
         height: 18px;
         cursor: pointer;
-        accent-color: var(--primary);
+        accent-color: var(--submit-button-bg-color);
+    }
+
+    .inquiry-form-container .terms-group label {
+        margin-bottom: 0;
+        color: var(--terms-text);
+        text-transform: none;
+        font-weight: normal;
+        line-height: 1.5;
+        font-size: 0.88rem;
     }
 
     .inquiry-form-container .submit-btn {
         width: 100%;
-        padding: 18px;
+        padding: 16px;
         font-size: 1.2rem;
+        font-weight: 800;
         margin: 0px 0px 20px 0px;
         background-color: var(--submit-button-bg-color);
-        color: #ffffff !important;
-        box-shadow: 0 4px 10px rgba(0, 86, 179, 0.3);
+        border: 1.5px solid var(--submit-button-border-color);
+        color: var(--submit-button-text-color) !important;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+        letter-spacing: 0.5px;
     }
 
     .inquiry-form-container .hidden-field {
         display: none;
     }
 
-    /* Honeypot field invisible to humans, irresistible to bot scrapers */
     .inquiry-form-container .hp-middle-name-wrap {
         position: absolute !important;
         left: -9999px !important;
@@ -361,29 +428,28 @@
         z-index: -10 !important;
     }
 
-    /* Success Message Styling */
     .success-message {
         display: none;
-        background: rgba(0, 0, 0, 0.7);
-        color: white;
-        padding: 60px 40px;
-        border-radius: 12px;
-        border: 2px solid var(--blue);
+        background: var(--card-box-bg);
+        color: var(--form-text);
+        padding: 50px 30px;
+        border-radius: 10px;
+        border: 2px solid var(--form-border);
         text-align: center;
         margin: 20px 0;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        box-shadow: var(--shadow);
     }
 
     .success-message h2 {
-        color: white;
+        color: var(--form-title-color);
         font-size: 2rem;
         margin-bottom: 15px;
     }
 
     .success-message p {
-        font-size: 1.1rem;
+        font-size: 1.05rem;
         margin-bottom: 30px;
-        opacity: 0.9;
+        color: var(--form-subtext);
     }
 
     .success-actions {
@@ -393,34 +459,22 @@
         flex-wrap: wrap;
     }
 
-    /* Responsive Adjustments */
     @media (max-width: 768px) {
-        .inquiry-content {
-            padding: 10px 0;
-        }
-        .container {
-            padding: 0 10px;
-        }
-        .inquiry-form-container {
-            padding: 20px 12px;
-        }
-        .inquiry-form-container.submitted {
-            padding: 0 !important;
-        }
+        .inquiry-content { padding: 10px 0; }
+        .container { padding: 0 10px; }
+        .inquiry-form-container { padding: 20px 14px 0px; }
+        .inquiry-form-container.submitted { padding: 0 !important; }
         .inquiry-form-container .row {
             flex-direction: column;
             gap: 12px;
             margin-bottom: 12px;
         }
-        .inquiry-form-container .row > .form-group {
-            width: 100%;
-        }
-        .inquiry-form-container .vehicle-block {
-            padding: 16px 12px;
-        }
+        .inquiry-form-container .row > .form-group { width: 100%; }
+        .inquiry-form-container .vehicle-block { padding: 16px 12px; }
         .inquiry-form-container .part-block {
-            margin-left: 5px;
-            padding: 14px 10px 10px 10px;
+            margin: 0 !important;
+            border-radius: 11px !important;
+            padding: 14px 10px 8px 10px;
         }
         .inquiry-form-container .btn-add-part {
             float: none;
@@ -456,7 +510,7 @@
         <p>Thank you for your interest. We will review your request and get back to you shortly.</p>
         <div class="success-actions">
             <button type="button" class="btn btn-blue" id="btnSubmitAnother">Submit Another Inquiry</button>
-            <a href="index.html" class="btn btn-outline-blue" style="color: white; border-color: white;">Return to Home Page</a>
+            <a href="index.html" class="btn btn-outline-blue">Return to Home Page</a>
         </div>
     </div>
 
@@ -549,13 +603,251 @@
 
 <script>
     (function() {
+        // =========================================================================
+        // HIGH-VELOCITY EDGE THEME HYDRATION
+        // Sub-35ms response directly through Cloudflare Edge Gateway
+        // =========================================================================
+        const GLOBALS_HUB_SHEET_ID = "1u_mZhsYM3J7in_8clshqbRYzHuCC83i15OMz2i3aAHQ";
+        const SETTINGS_GATEWAY_URL = `https://ghl-custom-workflow-settings.automybiz.workers.dev/?action=styles&gsheet_globals_id=${GLOBALS_HUB_SHEET_ID}`;
+
+        async function fetchAndApplyLiveTheme() {
+            const startTimestamp = Date.now();
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const isForceRefresh = urlParams.has('refresh') && urlParams.get('refresh') !== '0' && urlParams.get('refresh') !== 'false';
+                
+                const fetchUrl = `${SETTINGS_GATEWAY_URL}${isForceRefresh ? '&refresh=1' : ''}&t=${Date.now()}`;
+
+                const response = await fetch(fetchUrl);
+                if (!response.ok) return;
+
+                const data = await response.json();
+                if (!data || !data.success) return;
+
+                let activeThemeName = "DARK RUBY GOLD";
+                let tokens = {};
+
+                // Path A: Direct action=styles tokens payload (fastest)
+                if (data.tokens && typeof data.tokens === 'object') {
+                    tokens = data.tokens;
+                    if (data.active_theme_name) activeThemeName = data.active_theme_name;
+                } 
+                // Path B: Fallback 2D matrix parser (if worker returns full payload)
+                else if (Array.isArray(data.styles)) {
+                    const sRows = data.styles;
+                    const styleActiveRow = sRows.find(r => String(r[1] || r[0] || '').trim().toUpperCase() === "ACTIVE_THEME_NAME");
+                    if (styleActiveRow && (styleActiveRow[2] || styleActiveRow[1])) {
+                        activeThemeName = String(styleActiveRow[2] || styleActiveRow[1]).trim().toUpperCase();
+                    } else if (Array.isArray(data.settings)) {
+                        const themeSetting = data.settings.find(r => String(r[1] || r[0] || '').trim().toUpperCase() === "ACTIVE_THEME_NAME");
+                        if (themeSetting && (themeSetting[2] || themeSetting[1])) {
+                            activeThemeName = String(themeSetting[2] || themeSetting[1]).trim().toUpperCase();
+                        }
+                    }
+
+                    let activeColIdx = -1;
+                    for (let r = 0; r < Math.min(sRows.length, 6); r++) {
+                        const row = sRows[r];
+                        for (let c = 2; c < row.length; c++) {
+                            if (String(row[c] || '').trim().toUpperCase() === activeThemeName) {
+                                activeColIdx = c;
+                                break;
+                            }
+                        }
+                        if (activeColIdx !== -1) break;
+                    }
+
+                    if (activeColIdx === -1) activeColIdx = 2;
+
+                    for (let r = 0; r < sRows.length; r++) {
+                        const k = String(sRows[r][1] || sRows[r][0] || '').trim().toUpperCase();
+                        if (!k || k === "SETTING NAME" || k.startsWith("<--") || k.startsWith("<~~")) continue;
+                        const val = sRows[r][activeColIdx];
+                        if (val !== undefined && val !== null && String(val).trim() !== "") {
+                            tokens[k] = String(val).trim();
+                        }
+                    }
+                }
+
+                // Check URL query override (?theme=DARK_TOPAZ_AMBER)
+                const queryTheme = urlParams.get('theme') || urlParams.get('active_theme');
+                if (queryTheme) {
+                    activeThemeName = queryTheme.replace(/_/g, () => ' ').trim().toUpperCase();
+                }
+
+                const elapsedMs = Date.now() - startTimestamp;
+                const edgeStatus = response.headers.get("X-Edge-Cache") || "EDGE";
+                console.log(`[EPW Live Theme]: Active Theme -> ${activeThemeName} (${elapsedMs}ms, Cache: ${edgeStatus})`);
+
+                // Map Sheet Tokens to Concrete Style Overrides
+                const mainBg       = tokens["MAIN_BG_COLOR"] || "#100";
+                const cardBodyBg   = tokens["CARD_BODY_BG_COLOR"] || "#201";
+                const headerBg     = tokens["CARD_TITLE_BG_COLOR"] || "#301";
+                const borderClr    = tokens["CARD_BORDER_COLOR"] || tokens["MAIN_BORDER_COLOR"] || "#D12";
+                const titleClr     = tokens["MAIN_TITLE_TEXT_COLOR_1"] || "#FA0";
+                const textPrimary  = tokens["MAIN_TEXT_COLOR_1"] || "#FFF";
+                const textMuted    = tokens["MAIN_TEXT_COLOR_2"] || "#AAA";
+                const inputBg      = tokens["INPUT_BG_COLOR_1"] || "#100";
+                const inputBorder  = tokens["INPUT_BORDER_COLOR"] || "#411";
+                const inputFocus   = tokens["INPUT_FOCUS_BORDER_COLOR"] || "#FA0";
+                const submitBg     = tokens["BTN_SAVE_BG_COLOR"] || tokens["ACCENT_COLOR_1"] || "#D12";
+                const submitBorder = tokens["MAIN_LINK_COLOR_1"] || "#FA0";
+                const pillBg       = tokens["PILL_INQUIRY_BG_COLOR_1"] || "#301";
+                const pillText     = tokens["PILL_INQUIRY_TEXT_COLOR"] || "#F99";
+                const pillBorder   = tokens["PILL_INQUIRY_BORDER_COLOR"] || "#D12";
+
+                // Table Style Tokens
+                const tableBg1     = tokens["TABLE_BG_COLOR_1"] || "#100";
+                const tableBg2     = tokens["TABLE_BG_COLOR_2"] || "#210";
+                const tableBg3     = tokens["TABLE_BG_COLOR_3"] || "#301";
+                const tableBorder  = tokens["TABLE_BORDER_COLOR"] || borderClr;
+
+                const generatedCss = `
+                    :root, [data-theme="dark"], [data-theme="light"], body {
+                        --page-bg: ${mainBg} !important;
+                        --form-bg: ${mainBg} !important;
+                        --form-border: ${borderClr} !important;
+                        --form-text: ${textPrimary} !important;
+                        --form-subtext: ${textMuted} !important;
+                        --form-title-color: ${titleClr} !important;
+
+                        --input-label-color: ${titleClr} !important;
+                        --input-bg-color: ${inputBg} !important;
+                        --input-font-color: ${textPrimary} !important;
+                        --input-border-color: ${inputBorder} !important;
+                        --input-border-color-focused: ${inputFocus} !important;
+
+                        --card-box-bg: ${cardBodyBg} !important;
+                        --card-box-border: ${borderClr} !important;
+
+                        --table-bg-1: ${tableBg1} !important;
+                        --table-bg-2: ${tableBg2} !important;
+                        --table-bg-3: ${tableBg3} !important;
+                        --table-border: ${tableBorder} !important;
+
+                        --btn-action-bg: ${headerBg} !important;
+                        --btn-action-border: ${borderClr} !important;
+                        --btn-action-text: ${titleClr} !important;
+
+                        --submit-button-bg-color: ${submitBg} !important;
+                        --submit-button-border-color: ${submitBorder} !important;
+                        --submit-button-text-color: #FFF !important;
+
+                        --summary-card-bg: ${cardBodyBg} !important;
+                        --summary-card-border: ${borderClr} !important;
+                        --summary-card-header: ${headerBg} !important;
+                        --summary-card-title: ${titleClr} !important;
+                        --summary-pill-bg: ${pillBg} !important;
+                        --summary-pill-text: ${pillText} !important;
+                        --summary-pill-border: ${pillBorder} !important;
+
+                        --diy-bg: rgba(69, 10, 10, 0.4) !important;
+                        --diy-border: ${borderClr} !important;
+                        --diy-text: ${textPrimary} !important;
+
+                        --terms-bg: rgba(69, 10, 10, 0.25) !important;
+                        --terms-border: ${inputBorder} !important;
+                        --terms-text: ${textMuted} !important;
+                    }
+
+                    body, .inquiry-content {
+                        background-color: ${mainBg} !important;
+                    }
+                    .inquiry-form-container {
+                        background: ${mainBg} !important;
+                        border: 1.5px solid ${borderClr} !important;
+                        color: ${textPrimary} !important;
+                        padding: 30px 20px 0px !important;
+                    }
+                    .inquiry-form-container h1, .inquiry-form-container .section-title {
+                        color: ${titleClr} !important;
+                        border-bottom-color: ${borderClr} !important;
+                    }
+                    .inquiry-form-container .header p {
+                        color: ${textMuted} !important;
+                    }
+                    .inquiry-form-container label {
+                        color: ${titleClr} !important;
+                    }
+                    .inquiry-form-container input[type="text"],
+                    .inquiry-form-container input[type="email"],
+                    .inquiry-form-container input[type="tel"],
+                    .inquiry-form-container input[type="number"],
+                    .inquiry-form-container select,
+                    .inquiry-form-container textarea {
+                        background-color: ${inputBg} !important;
+                        border-color: ${inputBorder} !important;
+                        color: ${textPrimary} !important;
+                    }
+                    .inquiry-form-container input:focus,
+                    .inquiry-form-container select:focus,
+                    .inquiry-form-container textarea:focus {
+                        border-color: ${inputFocus} !important;
+                        box-shadow: 0 0 0 3px ${inputFocus}44 !important;
+                    }
+                    .inquiry-form-container .vehicle-block {
+                        background: ${cardBodyBg} !important;
+                        border-color: ${borderClr} !important;
+                    }
+
+                    /* Luxury Curved Bookmark Parts Block with Alternating & Hover Backgrounds */
+                    .inquiry-form-container .part-block {
+                        margin: 0 !important;
+                        border-radius: 11px !important;
+                        border-left: 3px solid ${tableBorder} !important;
+                        transition: background-color 0.2s ease, border-color 0.2s ease !important;
+                    }
+                    .inquiry-form-container .part-block:nth-child(odd) {
+                        background-color: ${tableBg1} !important;
+                    }
+                    .inquiry-form-container .part-block:nth-child(even) {
+                        background-color: ${tableBg2} !important;
+                    }
+                    .inquiry-form-container .part-block:hover {
+                        background-color: ${tableBg3} !important;
+                        border-left-color: ${titleClr} !important;
+                    }
+
+                    .inquiry-form-container .btn-blue,
+                    .inquiry-form-container .btn-add-part {
+                        background: ${headerBg} !important;
+                        border: 1px solid ${borderClr} !important;
+                        color: ${titleClr} !important;
+                    }
+                    .inquiry-form-container .submit-btn {
+                        background-color: ${submitBg} !important;
+                        border-color: ${submitBorder} !important;
+                        color: #FFF !important;
+                    }
+                `;
+
+                let liveStyleEl = document.getElementById('epwDynamicThemeStyles');
+                if (!liveStyleEl) {
+                    liveStyleEl = document.createElement('style');
+                    liveStyleEl.id = 'epwDynamicThemeStyles';
+                    document.head.appendChild(liveStyleEl);
+                }
+                liveStyleEl.textContent = generatedCss;
+
+                localStorage.setItem('epw_live_theme_css', generatedCss);
+                localStorage.setItem('epw_live_theme_name', activeThemeName);
+
+                generateYAMLSnippet();
+
+            } catch (err) {
+                console.warn("[EPW Live Theme Handshake]:", err);
+            }
+        }
+
+        fetchAndApplyLiveTheme();
+
         // ==========================================
         // CONFIGURATION VARIABLES & TOGGLES
         // ==========================================
         const STICKY_FIELDS_MAIN = ['first_name', 'last_name', 'email', 'phone', 'business_name', 'po_number', 'diy_tech', 'terms'];
-        const STICKY_FIELDS_MAIN_TOGGLE = true;            // Toggle persistence for main contact fields (true/false)
-        const STICK_FIELDS_MAIN_TOGGLE = STICKY_FIELDS_MAIN_TOGGLE; // Alias support
-        const STICKY_FIELDS_ITEMS_TOGGLE = false;          // Toggle persistence for vehicles & parts (Set to false per Day's request)
+        const STICKY_FIELDS_MAIN_TOGGLE = true;
+        const STICK_FIELDS_MAIN_TOGGLE = STICKY_FIELDS_MAIN_TOGGLE;
+        const STICKY_FIELDS_ITEMS_TOGGLE = false;
 
         // State Management
         let vehicles = [];
@@ -570,7 +862,6 @@
             localStorage.setItem('persistent_vehicles', JSON.stringify(filteredVehicles));
         }
 
-        // Load persistent vehicles on init (if enabled)
         if (STICKY_FIELDS_ITEMS_TOGGLE) {
             const storedVehicles = localStorage.getItem('persistent_vehicles');
             if (storedVehicles) {
@@ -588,7 +879,6 @@
             }
         }
 
-        // Default if empty
         if (vehicles.length === 0) {
             vehicles = [
                 {
@@ -613,7 +903,6 @@
         const successMessage = document.getElementById('successMessage');
         const btnSubmitAnother = document.getElementById('btnSubmitAnother');
 
-        // Render vehicles and parts
         function renderVehicles() {
             vehiclesContainer.innerHTML = '';
             
@@ -629,7 +918,6 @@
                 const isInHistory = history.some(h => h.id === vehicle.id && (h.name || h.vin));
                 const canRemoveVehicle = vehicles.length > 1;
 
-                // Build remove button block based on STICKY_FIELDS_ITEMS_TOGGLE
                 let removeButtonsHtml = '';
                 if (STICKY_FIELDS_ITEMS_TOGGLE) {
                     removeButtonsHtml = `
@@ -807,14 +1095,15 @@
             return `${weekday} ${datePart} at ${timePart}`;
         }
 
+        // Strict Rule 5 Function Callbacks on HTML Escaper
         function escapeHtml(str) {
             if (!str) return '';
             return String(str)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#039;');
+                .replace(/&/g, () => '&amp;')
+                .replace(/</g, () => '&lt;')
+                .replace(/>/g, () => '&gt;')
+                .replace(/"/g, () => '&quot;')
+                .replace(/'/g, () => '&#039;');
         }
 
         function generateYAMLSnippet() {
@@ -842,18 +1131,18 @@
 
                     let vHtmlUser = `
 <div style="margin-bottom: 20px;">
-    <div style="font-size: 1.15rem; font-weight: 700; color: #00e5ff; margin-bottom: 8px;">
-        🚗 Vehicle: ${escapeHtml(vName)} ${vVin ? `<span style="font-size: 0.95rem; font-weight: normal; color: #a0a0a0; margin-left: 10px;">|&nbsp;&nbsp;VIN: ${escapeHtml(vVin)}</span>` : ''}
+    <div style="font-size: 1.15rem; font-weight: 700; color: var(--form-title-color); margin-bottom: 8px;">
+        🚗 Vehicle: ${escapeHtml(vName)} ${vVin ? `<span style="font-size: 0.95rem; font-weight: normal; color: var(--form-subtext); margin-left: 10px;">|&nbsp;&nbsp;VIN: ${escapeHtml(vVin)}</span>` : ''}
     </div>
-    <div style="border-top: 1px dashed #555555; margin: 10px 0 16px 0;"></div>
+    <div style="border-top: 1px dashed var(--card-box-border); margin: 10px 0 16px 0;"></div>
 `;
 
                     let vHtmlAdmin = `
 <div style="margin-bottom: 20px;">
-    <div style="font-size: 1.15rem; font-weight: 700; color: #00e5ff; margin-bottom: 8px;">
-        🚗 Vehicle: ${escapeHtml(vName)} ${vVin ? `<span style="font-size: 0.95rem; font-weight: normal; color: #a0a0a0; margin-left: 10px;">|&nbsp;&nbsp;VIN: ${escapeHtml(vVin)}</span>` : ''}
+    <div style="font-size: 1.15rem; font-weight: 700; color: var(--form-title-color); margin-bottom: 8px;">
+        🚗 Vehicle: ${escapeHtml(vName)} ${vVin ? `<span style="font-size: 0.95rem; font-weight: normal; color: var(--form-subtext); margin-left: 10px;">|&nbsp;&nbsp;VIN: ${escapeHtml(vVin)}</span>` : ''}
     </div>
-    <div style="border-top: 1px dashed #555555; margin: 10px 0 16px 0;"></div>
+    <div style="border-top: 1px dashed var(--card-box-border); margin: 10px 0 16px 0;"></div>
 `;
 
                     vehicle.parts.forEach(part => {
@@ -880,24 +1169,24 @@
                         vHtmlUser += `
     <div style="margin-bottom: 16px; padding-left: 8px;">
         <div style="margin-bottom: 8px; display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">
-            <span style="display: inline-block; border: 1.5px solid #00e5ff; border-radius: 18px; padding: 3px 12px; font-weight: 700; font-size: 0.85rem; color: #00e5ff; background: rgba(0, 229, 255, 0.08);">QTY: ${pQty}</span>
-            <span style="font-weight: 700; font-size: 1.05rem; color: #ffffff;">${escapeHtml(pName)}</span>
+            <span style="display: inline-block; border: 1.5px solid var(--summary-pill-border); border-radius: 18px; padding: 3px 12px; font-weight: 700; font-size: 0.85rem; color: var(--summary-pill-text); background: var(--summary-pill-bg);">QTY: ${pQty}</span>
+            <span style="font-weight: 700; font-size: 1.05rem; color: var(--form-text);">${escapeHtml(pName)}</span>
         </div>
-        ${pNo ? `<div style="font-size: 0.92rem; color: #d0d0d0; margin: 4px 0 4px 12px;">🔢 <strong>Part No:</strong> ${escapeHtml(pNo)}</div>` : ''}
+        ${pNo ? `<div style="font-size: 0.92rem; color: var(--form-subtext); margin: 4px 0 4px 12px;">🔢 <strong>Part No:</strong> ${escapeHtml(pNo)}</div>` : ''}
     </div>`;
 
                         vHtmlAdmin += `
     <div style="margin-bottom: 16px; padding-left: 8px;">
         <div style="margin-bottom: 8px; display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">
-            <span style="display: inline-block; border: 1.5px solid #00e5ff; border-radius: 18px; padding: 3px 12px; font-weight: 700; font-size: 0.85rem; color: #00e5ff; background: rgba(0, 229, 255, 0.08);">INQUIRY: 1</span>
-            <span style="font-weight: 700; font-size: 1.05rem; color: #ffffff;">${escapeHtml(pName)}</span>
+            <span style="display: inline-block; border: 1.5px solid var(--summary-pill-border); border-radius: 18px; padding: 3px 12px; font-weight: 700; font-size: 0.85rem; color: var(--summary-pill-text); background: var(--summary-pill-bg);">INQUIRY: 1</span>
+            <span style="font-weight: 700; font-size: 1.05rem; color: var(--form-text);">${escapeHtml(pName)}</span>
         </div>
-        ${pNo ? `<div style="font-size: 0.92rem; color: #d0d0d0; margin: 4px 0 4px 12px;">🔢 <strong>Part No:</strong> ${escapeHtml(pNo)}</div>` : ''}
-        <div style="font-size: 0.92rem; color: #d0d0d0; margin: 4px 0 4px 12px;">📊 <strong>Inquiries:</strong> 1</div>
-        <div style="font-size: 0.92rem; color: #d0d0d0; margin: 4px 0 4px 12px;">⏰ <strong>Last Inquiry:</strong> ${timestamp}</div>
+        ${pNo ? `<div style="font-size: 0.92rem; color: var(--form-subtext); margin: 4px 0 4px 12px;">🔢 <strong>Part No:</strong> ${escapeHtml(pNo)}</div>` : ''}
+        <div style="font-size: 0.92rem; color: var(--form-subtext); margin: 4px 0 4px 12px;">📊 <strong>Inquiries:</strong> 1</div>
+        <div style="font-size: 0.92rem; color: var(--form-subtext); margin: 4px 0 4px 12px;">⏰ <strong>Last Inquiry:</strong> ${timestamp}</div>
     </div>`;
 
-                        const escapeCSV = (str) => str.replace(/"/g, '""');
+                        const escapeCSV = (str) => str.replace(/"/g, () => '""');
                         csvLines.push(`"${escapeCSV(pNo)}"," : ","${escapeCSV(pName)} for ${escapeCSV(vName)}"," : ","${escapeCSV(pMan)}"`);
                     });
 
@@ -910,19 +1199,19 @@
             });
 
             const userCardHtml = `
-<div style="border: 2px solid #009999; border-radius: 8px; background-color: #121212; color: #ffffff; padding: 22px; font-family: 'Inter', Arial, sans-serif;">
-    <div style="border-bottom: 2px solid #009999; padding-bottom: 12px; margin-bottom: 18px; font-weight: 700; font-size: 1.15rem; color: #00ffff; display: flex; align-items: center; gap: 8px;">
+<div style="border: 2px solid var(--summary-card-border); border-radius: 8px; background-color: var(--summary-card-bg); color: var(--form-text); padding: 22px; font-family: inherit;">
+    <div style="border-bottom: 2px solid var(--summary-card-border); padding-bottom: 12px; margin-bottom: 18px; font-weight: 700; font-size: 1.15rem; color: var(--summary-card-title); display: flex; align-items: center; gap: 8px;">
         📋 Inquiry Summary
     </div>
-    ${htmlUserParts.length > 0 ? htmlUserParts.join('') : '<div style="color: #888; font-style: italic;">No vehicles or parts entered yet.</div>'}
+    ${htmlUserParts.length > 0 ? htmlUserParts.join('') : '<div style="color: var(--form-subtext); font-style: italic;">No vehicles or parts entered yet.</div>'}
 </div>`;
 
             const adminCardHtml = `
-<div style="border: 2px solid #009999; border-radius: 8px; background-color: #121212; color: #ffffff; padding: 22px; font-family: 'Inter', Arial, sans-serif;">
-    <div style="border-bottom: 2px solid #009999; padding-bottom: 12px; margin-bottom: 18px; font-weight: 700; font-size: 1.15rem; color: #00ffff; display: flex; align-items: center; gap: 8px;">
+<div style="border: 2px solid var(--summary-card-border); border-radius: 8px; background-color: var(--summary-card-bg); color: var(--form-text); padding: 22px; font-family: inherit;">
+    <div style="border-bottom: 2px solid var(--summary-card-border); padding-bottom: 12px; margin-bottom: 18px; font-weight: 700; font-size: 1.15rem; color: var(--summary-card-title); display: flex; align-items: center; gap: 8px;">
         📋 Product Inquiry Data
     </div>
-    ${htmlFullParts.length > 0 ? htmlFullParts.join('') : '<div style="color: #888; font-style: italic;">No vehicles or parts entered yet.</div>'}
+    ${htmlFullParts.length > 0 ? htmlFullParts.join('') : '<div style="color: var(--form-subtext); font-style: italic;">No vehicles or parts entered yet.</div>'}
 </div>`;
 
             summaryDisplay.innerHTML = userCardHtml;
@@ -1025,7 +1314,7 @@
             phoneInput.addEventListener('input', function(e) {
                 let x = e.target.value.replace(/\D/g, '').match(/(\d{0,3})(\d{0,3})(\d{0,4})/);
                 if (e.target.value.startsWith('+')) {
-                    e.target.value = '+' + e.target.value.replace(/\D/g, '');
+                    e.target.value = '+' + e.target.value.replace(/\D/g, () => '');
                 } else {
                     e.target.value = !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');
                 }
@@ -1086,7 +1375,7 @@
 
                 const rawVin = (v.vin || '').trim();
                 if (rawVin.length > 0) {
-                    const cleanVin = rawVin.replace(/[\s-]/g, '');
+                    const cleanVin = rawVin.replace(/[\s-]/g, () => '');
                     if (cleanVin.length > 17) {
                         errors.push(`The VIN for ${vehicleName} is too long (${cleanVin.length} characters). Standard VINs are at most 17 characters.`);
                     } else if (cleanVin.length < 5) {
@@ -1150,7 +1439,6 @@
             }
         });
 
-        // Handle "Submit Another" button
         if (btnSubmitAnother) {
             btnSubmitAnother.addEventListener('click', function() {
                 document.querySelector('.inquiry-form-container').classList.remove('submitted');
