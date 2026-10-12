@@ -32,6 +32,19 @@
             background-color: var(--page-bg, var(--bg-color, #111));
             transition: background-color 0.25s ease;
         }
+
+        /* Brief highlight flash for parts added/updated via URL prefill (GET variables) */
+        @keyframes epwPartFlash {
+            0%   { box-shadow: 0 0 0 3px var(--epw-flash-color, #FA0), 0 0 22px 6px var(--epw-flash-color, #FA0); }
+            60%  { box-shadow: 0 0 0 2px var(--epw-flash-color, #FA0), 0 0 14px 3px var(--epw-flash-color, #FA0); }
+            100% { box-shadow: 0 2px 6px rgba(0,0,0,0.3); }
+        }
+        .inquiry-form-container .part-block.epw-flash-new {
+            animation: epwPartFlash 1.2s ease-out 1;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .inquiry-form-container .part-block.epw-flash-new { animation: none; }
+        }
     </style>
 </head>
 <body>
@@ -849,6 +862,10 @@
         const STICK_FIELDS_MAIN_TOGGLE = STICKY_FIELDS_MAIN_TOGGLE;
         const STICKY_FIELDS_ITEMS_TOGGLE = false;
 
+        // Brief highlight flash for parts added/updated via URL prefill (GET variables)
+        const BRIEF_HIGHLIGHT_FLASH_LENGTH = 6000;   // ms — glow duration for a newly added/updated part row
+        const BRIEF_HIGHLIGHT_FLASH_COLOR = '#FA0';  // Shorthand (or full) HEX color for the flash glow
+
         // State Management
         let vehicles = [];
         
@@ -960,6 +977,8 @@
                 vehicle.parts.forEach((part, pIndex) => {
                     const pBlock = document.createElement('div');
                     pBlock.className = 'part-block';
+                    pBlock.dataset.partId = part.id;
+                    pBlock.dataset.vehicleId = vehicle.id;
                     pBlock.innerHTML = `
                         <button type="button" class="btn btn-danger remove-btn" onclick="removePartSnippet(${vehicle.id}, ${part.id})" title="Remove Part">×</button>
                     <div class="row">
@@ -987,6 +1006,126 @@
                 vehiclesContainer.appendChild(vBlock);
             });
             generateYAMLSnippet();
+        }
+
+        // ==========================================
+        // URL PREFILL HELPERS (append / de-dup / flash)
+        // ==========================================
+        // A "meaningful" part has any of the three user-facing fields filled.
+        function isPartBlank(p) {
+            return !((p.name && p.name.trim()) || (p.partNo && p.partNo.trim()) || (p.manufacturer && p.manufacturer.trim()));
+        }
+
+        // A vehicle header is meaningful when either name or VIN is set.
+        function isVehicleHeaderBlank(v) {
+            return !((v.name && v.name.trim()) || (v.vin && v.vin.trim()));
+        }
+
+        // Merge link-built vehicles into the current form WITHOUT overwriting anything.
+        // - De-dup by partNo (fallback: name); on match, bump qty + fill blanks.
+        // - Otherwise reuse a fully-blank part row, else append a new part at the bottom.
+        // Newly touched/added part ids are pushed into `pendingFlash`.
+        function mergeVehiclesFromLink(built, pendingFlash) {
+            built.forEach((incoming, idx) => {
+                let target = vehicles[idx];
+
+                // ---- Vehicle header handling ----
+                if (idx === 0 && target) {
+                    const incomingHasHeader = (incoming.name && incoming.name.trim()) || (incoming.vin && incoming.vin.trim());
+                    if (incomingHasHeader) {
+                        if (isVehicleHeaderBlank(target)) {
+                            if (incoming.name) target.name = incoming.name;
+                            if (incoming.vin) target.vin = incoming.vin;
+                        } else {
+                            const sameHeader =
+                                (incoming.name || '').trim() === (target.name || '').trim() &&
+                                (incoming.vin || '').trim() === (target.vin || '').trim();
+                            if (!sameHeader) {
+                                // Different car -> don't merge into the wrong vehicle; new block instead.
+                                target = { id: Date.now(), name: incoming.name || '', vin: incoming.vin || '', parts: [] };
+                                vehicles.push(target);
+                            }
+                        }
+                    }
+                }
+
+                // Create the target vehicle block if it doesn't exist yet (vN_ beyond current range).
+                if (!target) {
+                    target = { id: Date.now() + idx, name: incoming.name || '', vin: incoming.vin || '', parts: [] };
+                    vehicles.push(target);
+                } else if (idx > 0 && isVehicleHeaderBlank(target) && (incoming.name || incoming.vin)) {
+                    if (incoming.name) target.name = incoming.name;
+                    if (incoming.vin) target.vin = incoming.vin;
+                }
+
+                // ---- Part merge ----
+                incoming.parts.forEach(inPart => {
+                    if (isPartBlank(inPart)) return; // ignore empty incoming rows
+
+                    const noKey = (inPart.partNo || '').trim().toLowerCase();
+                    const nameKey = (inPart.name || '').trim().toLowerCase();
+                    let match = null;
+                    if (noKey) {
+                        match = target.parts.find(p => (p.partNo || '').trim().toLowerCase() === noKey);
+                    } else if (nameKey) {
+                        match = target.parts.find(p => (p.name || '').trim().toLowerCase() === nameKey);
+                    }
+
+                    const incomingQty = parseInt(inPart.qty, 10) || 1;
+
+                    if (match) {
+                        // Smart de-dup: add quantities + backfill any missing fields.
+                        const existingQty = parseInt(match.qty, 10) || 1;
+                        match.qty = Math.min(100, existingQty + incomingQty);
+                        if (!match.name && inPart.name) match.name = inPart.name;
+                        if (!match.partNo && inPart.partNo) match.partNo = inPart.partNo;
+                        if (!match.manufacturer && inPart.manufacturer) match.manufacturer = inPart.manufacturer;
+                        pendingFlash.push(match.id);
+                        return;
+                    }
+
+                    // Reuse a fully-blank row so we don't leave a stray empty part.
+                    const blank = target.parts.find(isPartBlank);
+                    if (blank) {
+                        blank.name = inPart.name || '';
+                        blank.partNo = inPart.partNo || '';
+                        blank.manufacturer = inPart.manufacturer || '';
+                        blank.qty = incomingQty;
+                        pendingFlash.push(blank.id);
+                        return;
+                    }
+
+                    // Otherwise append a brand-new part at the bottom.
+                    const newPart = {
+                        id: Date.now() + target.parts.length + Math.floor(Math.random() * 100000),
+                        name: inPart.name || '',
+                        partNo: inPart.partNo || '',
+                        manufacturer: inPart.manufacturer || '',
+                        qty: incomingQty,
+                        status: 'I'
+                    };
+                    target.parts.push(newPart);
+                    pendingFlash.push(newPart.id);
+                });
+            });
+        }
+
+        // Briefly glow the given part blocks so the user sees what the link did.
+        function flashParts(ids) {
+            if (!ids || !ids.length) return;
+            if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+            document.documentElement.style.setProperty('--epw-flash-color', BRIEF_HIGHLIGHT_FLASH_COLOR);
+
+            ids.forEach(id => {
+                const el = vehiclesContainer.querySelector(`.part-block[data-part-id="${id}"]`);
+                if (!el) return;
+                el.style.animationDuration = BRIEF_HIGHLIGHT_FLASH_LENGTH + 'ms';
+                el.classList.remove('epw-flash-new');
+                void el.offsetWidth; // force reflow so the animation can restart if needed
+                el.classList.add('epw-flash-new');
+                setTimeout(() => el.classList.remove('epw-flash-new'), BRIEF_HIGHLIGHT_FLASH_LENGTH + 150);
+            });
         }
 
         window.addVehicleSnippet = function() {
@@ -1389,8 +1528,29 @@
                 }
 
                 if (built.length) {
-                    vehicles = built;
+                    // Does the form already carry meaningful content (e.g. from sticky memory)?
+                    const formHasParts = vehicles.some(v =>
+                        (v.name && v.name.trim()) ||
+                        (v.vin && v.vin.trim()) ||
+                        (v.parts && v.parts.some(p => !isPartBlank(p)))
+                    );
+
+                    const pendingFlash = [];
+
+                    if (!formHasParts) {
+                        // Empty form -> fill row 1 exactly (part links land in the first part row).
+                        vehicles = built;
+                        built.forEach(v => v.parts.forEach(p => {
+                            if (!isPartBlank(p)) pendingFlash.push(p.id);
+                        }));
+                    } else {
+                        // Existing content -> append / de-dup, never clobber.
+                        mergeVehiclesFromLink(built, pendingFlash);
+                    }
+
+                    saveVehiclesToLocalStorage();
                     renderVehicles();
+                    flashParts(pendingFlash);
                 }
             }
         }
