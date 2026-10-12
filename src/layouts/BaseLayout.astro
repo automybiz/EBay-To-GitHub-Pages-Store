@@ -13,6 +13,16 @@ const {
   description = 'Specializing in OEM and performance parts for your 911, GT3, and classic Porsche models.',
   containerMaxWidth = '1200px',
 } = Astro.props;
+
+/**
+ * ── STAGING ─────────────────────────────────────────────────────────────────
+ * The storefront is deployed but deliberately unannounced: it isn't linked from
+ * the public site, and every page it renders asks search engines to stay away.
+ *
+ * To launch: set this to `false` and re-add the Store / Inventory entries in the
+ * nav below (see the note there).
+ */
+const NOINDEX_STAGING = true;
 ---
 
 <!DOCTYPE html>
@@ -22,6 +32,8 @@ const {
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{title}</title>
     <meta name="description" content={description} />
+    {/* Keeps the staged storefront out of search results — see NOINDEX_STAGING. */}
+    {NOINDEX_STAGING && <meta name="robots" content="noindex, nofollow" />}
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -47,7 +59,7 @@ const {
     <header>
       <nav class="container">
         <div class="logo">
-          <a href="/store">
+          <a href="/store/">
             <img
               src="/assets/images/EURO-PARTS-WEST-logo-720-v1911.gif"
               alt="EuroPartsWest"
@@ -55,8 +67,13 @@ const {
           </a>
         </div>
         <ul class="nav-links">
-          <li><a href="/store">Store</a></li>
-          <li><a href="/store#products">Inventory</a></li>
+          {/*
+            STAGING: the storefront is intentionally not on the menu yet.
+            Re-add these two entries when you launch:
+
+              <li><a href="/store/">Store</a></li>
+              <li><a href="/store/#products">Inventory</a></li>
+          */}
           <li>
             <a href="https://www.ebay.com/str/europartswestllc" target="_blank" rel="noopener"
               >eBay Store</a

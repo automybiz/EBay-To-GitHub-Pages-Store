@@ -1,0 +1,76 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  # Lets you re-run a deployment by hand from the Actions tab.
+  workflow_dispatch:
+
+# Required by actions/deploy-pages: it publishes through OIDC rather than by
+# pushing to a branch.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deployment at a time. Queued rather than cancelled, so an in-flight
+# publish is never left half-applied.
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build the Astro storefront
+        run: npm run build
+
+      - name: Add the existing static site to the artifact
+        run: |
+          # GitHub Pages publishes *only* the artifact we upload, so the pages
+          # that branch-deployment used to serve have to travel with the Astro
+          # build. Without this the homepage (index.html) and every legacy page
+          # would 404 the moment this workflow takes over.
+          mkdir -p dist/client/assets
+          cp -R assets/. dist/client/assets/
+          cp -f *.html dist/client/
+          cp -f favicon.ico products.json dist/client/
+
+      - name: Remove Cloudflare-only output
+        run: |
+          # The Cloudflare adapter leaves these behind; they mean nothing on
+          # GitHub Pages and shouldn't be publicly fetchable.
+          rm -f dist/client/wrangler.json dist/client/.assetsignore
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # `output: 'static'` with the Cloudflare adapter emits the site here.
+          path: dist/client
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

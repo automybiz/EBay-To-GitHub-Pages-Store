@@ -121,15 +121,53 @@ Due to browser security (CORS), the product list will not load if you open `inde
 2.  Install the **Live Server** extension.
 3.  Right-click `index.html` and select **Open with Live Server**.
 
-## 🚀 How to Launch on GitHub Pages (Free Hosting)
+## 🚀 Deployment (GitHub Pages → europartswest.com)
 
-1.  Create a new repository on GitHub (e.g., `euro-parts-store`).
-2.  Upload these files to the repository.
-3.  Go to **Settings > Pages**.
-4.  Under "Build and deployment", set "Source" to **Deploy from a branch**.
-5.  Select the `main` branch and `/ (root)` folder. Click **Save**.
-6.  Your site will be live at `https://your-username.github.io/euro-parts-store/`.
-7.  **Custom Domain:** In the same Pages settings, you can add `EuroPartsWest.com`. You will need to update your DNS settings (A records and CNAME) at your domain registrar (e.g., GoDaddy, Namecheap).
+`.github/workflows/deploy.yml` publishes the site on every push to `main`
+(`workflow_dispatch` also allows a manual run from the Actions tab).
+
+**One-time setup:** **Settings → Pages → Build and deployment → Source = GitHub Actions**.
+Keep `europartswest.com` set under **Custom domain**; it is also carried inside the
+artifact by `public/CNAME` so the domain survives every deploy.
+
+**What gets published.** GitHub Pages publishes *only* the uploaded artifact, so the
+workflow folds the existing static site from the repo root in alongside the Astro build:
+
+| Published | No longer published |
+| --- | --- |
+| the Astro storefront, `/admin` and CMS uploads | `src/`, `scripts/` |
+| root `*.html` (homepage, contact, inquiry, legacy `store.html`) | `workers/`, `ai_prompts/` |
+| `assets/`, `favicon.ico`, `products.json`, `CNAME`, `robots.txt` | `*.py`, `package.json`, `.env.example` |
+
+> ⚠️ **Worth reviewing.** Until now Pages served the **branch root**, so `src/`, the Python
+> sync scripts and the Cloudflare notes in `workers/` (they name `api_key` / `token` /
+> `secret` fields) were all publicly fetchable at europartswest.com. Publishing a built
+> artifact stops that — but check whether anything in there needs rotating.
+
+**URLs**
+
+* `/` — the existing marketing homepage (unchanged)
+* `/store/` — the new Astro storefront
+* `/store.html` — the previous store page, kept so the **Products** links on the inquiry
+  pages still resolve; the new store is the one at `/store/`
+* `/products/<id>/` — product detail pages
+
+### 🚧 The store is staged, not launched
+
+It is deployed but deliberately unannounced — two things stay switched off until you're ready:
+
+1. **Not on the menu.** The Store / Inventory nav links were removed from
+   `src/layouts/BaseLayout.astro`; the exact lines to put back are in a comment there.
+2. **Not in search results.** Every storefront page renders
+   `<meta name="robots" content="noindex, nofollow">`, controlled by the `NOINDEX_STAGING`
+   flag at the top of the same file.
+
+`public/robots.txt` deliberately does **not** disallow `/store` or `/products`: blocking
+crawlers stops them reading the `noindex` tag, and an uncrawlable-but-linked URL can still
+surface as a bare link in results. Staying crawlable is what keeps those pages out of search.
+
+**To launch:** set `NOINDEX_STAGING = false`, re-add the two nav entries, and remove the
+explanatory note in `public/robots.txt`.
 
 ---
 

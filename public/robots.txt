@@ -1,0 +1,14 @@
+# https://europartswest.com/robots.txt
+
+User-agent: *
+# The CMS admin UI is private.
+Disallow: /admin
+
+# NOTE: /store and /products are intentionally NOT disallowed here.
+#
+# The storefront is staged (not launched yet), and its pages carry
+# <meta name="robots" content="noindex, nofollow">. Blocking them in robots.txt
+# would stop crawlers fetching the page, which means they would never see that
+# noindex tag — and a URL that can't be crawled but is linked from elsewhere can
+# still surface in results as a bare link. Leaving them crawlable is what
+# actually keeps them out of search.
