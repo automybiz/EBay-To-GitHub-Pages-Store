@@ -1267,6 +1267,15 @@
             let csvLines = [];
             const timestamp = formatDateSnippet(new Date());
 
+            // Work out *why* the summary could be empty: a part entered with no
+            // vehicle is a different (and fixable) problem than nothing entered at
+            // all. (A vehicle only counts in the summary once it has a name, so
+            // htmlUserParts being empty already means "no named vehicle".)
+            const hasAnyPart = vehicles.some(v => (v.parts || []).some(p => !isPartBlank(p)));
+            const summaryEmptyMessage = hasAnyPart
+                ? 'Parts entered but at least one vehicle is required.'
+                : 'No vehicles or parts entered yet.';
+
             vehicles.forEach(vehicle => {
                 const vName = vehicle.name.trim();
                 const vVin = vehicle.vin.trim();
@@ -1356,7 +1365,7 @@
     <div style="border-bottom: 2px solid var(--summary-card-border); padding-bottom: 12px; margin-bottom: 18px; font-weight: 700; font-size: 1.15rem; color: var(--summary-card-title); display: flex; align-items: center; gap: 8px;">
         📋 Inquiry Summary
     </div>
-    ${htmlUserParts.length > 0 ? htmlUserParts.join('') : '<div style="color: var(--form-subtext); font-style: italic;">No vehicles or parts entered yet.</div>'}
+    ${htmlUserParts.length > 0 ? htmlUserParts.join('') : `<div style="color: var(--form-subtext); font-style: italic;">${summaryEmptyMessage}</div>`}
 </div>`;
 
             const adminCardHtml = `
@@ -1364,7 +1373,7 @@
     <div style="border-bottom: 2px solid var(--summary-card-border); padding-bottom: 12px; margin-bottom: 18px; font-weight: 700; font-size: 1.15rem; color: var(--summary-card-title); display: flex; align-items: center; gap: 8px;">
         📋 Product Inquiry Data
     </div>
-    ${htmlFullParts.length > 0 ? htmlFullParts.join('') : '<div style="color: var(--form-subtext); font-style: italic;">No vehicles or parts entered yet.</div>'}
+    ${htmlFullParts.length > 0 ? htmlFullParts.join('') : `<div style="color: var(--form-subtext); font-style: italic;">${summaryEmptyMessage}</div>`}
 </div>`;
 
             summaryDisplay.innerHTML = userCardHtml;
