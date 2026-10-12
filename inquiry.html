@@ -942,11 +942,11 @@
                             <div class="row">
                                 <div class="form-group" style="flex: 2;">
                                     <label>Vehicle Name (Make, Model, Year)</label>
-                                    <input type="text" placeholder="e.g. Porsche 911 1988" value="${vehicle.name}" oninput="updateVehicleValueSnippet(${vehicle.id}, 'name', this.value)">
+                                    <input type="text" placeholder="e.g. Porsche 911 1988" value="${escapeHtml(vehicle.name)}" oninput="updateVehicleValueSnippet(${vehicle.id}, 'name', this.value)">
                                 </div>
                                 <div class="form-group" style="flex: 1;">
                                     <label>VIN (5–17 chars)</label>
-                                    <input type="text" maxlength="17" placeholder="Optional" style="text-transform: uppercase;" value="${vehicle.vin}" oninput="updateVehicleValueSnippet(${vehicle.id}, 'vin', this.value.toUpperCase())">
+                                    <input type="text" maxlength="17" placeholder="Optional" style="text-transform: uppercase;" value="${escapeHtml(vehicle.vin)}" oninput="updateVehicleValueSnippet(${vehicle.id}, 'vin', this.value.toUpperCase())">
                                 </div>
                             </div>
                         </div>
@@ -965,19 +965,19 @@
                     <div class="row">
                         <div class="form-group" style="flex: 1.5;">
                             <label>Part No.</label>
-                            <input type="text" placeholder="Optional" value="${part.partNo}" oninput="updatePartSnippet(${vehicle.id}, ${part.id}, 'partNo', this.value)">
+                            <input type="text" placeholder="Optional" value="${escapeHtml(part.partNo)}" oninput="updatePartSnippet(${vehicle.id}, ${part.id}, 'partNo', this.value)">
                         </div>
                         <div class="form-group" style="flex: 2.5;">
                             <label>Part Name / Description</label>
-                            <input type="text" placeholder="e.g. Rims BBS 20 Inch Chrome Front" value="${part.name}" oninput="updatePartSnippet(${vehicle.id}, ${part.id}, 'name', this.value)">
+                            <input type="text" placeholder="e.g. Rims BBS 20 Inch Chrome Front" value="${escapeHtml(part.name)}" oninput="updatePartSnippet(${vehicle.id}, ${part.id}, 'name', this.value)">
                         </div>
                         <div class="form-group" style="flex: 1.2;">
                             <label>Brand / Manufacturer</label>
-                            <input type="text" placeholder="Optional" value="${part.manufacturer || ''}" oninput="updatePartSnippet(${vehicle.id}, ${part.id}, 'manufacturer', this.value)">
+                            <input type="text" placeholder="Optional" value="${escapeHtml(part.manufacturer || '')}" oninput="updatePartSnippet(${vehicle.id}, ${part.id}, 'manufacturer', this.value)">
                         </div>
                         <div class="form-group" style="flex: 0.6;">
                             <label>Qty</label>
-                            <input type="number" min="1" max="100" value="${part.qty}" oninput="updatePartSnippet(${vehicle.id}, ${part.id}, 'qty', this.value)">
+                            <input type="number" min="1" max="100" value="${escapeHtml(part.qty)}" oninput="updatePartSnippet(${vehicle.id}, ${part.id}, 'qty', this.value)">
                         </div>
                     </div>
                     `;
@@ -1302,6 +1302,95 @@
                         }
                         el.dispatchEvent(new Event('input', { bubbles: true }));
                     }
+                }
+            }
+
+            // ---- VEHICLE & PART PREFILL (GET query strings) ----
+            // Grammar: [vN_][pP_]<field>   -> part fields (name | no | brand | qty)
+            //          [vN_]<vehicle|vin>  -> vehicle header fields
+            // N (vehicle) defaults to 1, P (part) defaults to 1.
+            //   ?part_name=A&part_no=B            -> Vehicle 1, Part 1
+            //   ?p1_name=A&p2_name=B              -> Vehicle 1, Parts 1 & 2
+            //   ?v2_p1_name=C                     -> Vehicle 2, Part 1
+            //   ?v2_vehicle=BMW&v2_vin=WBS...     -> Vehicle 2 header
+            // Backward compatible: 'part' is accepted in place of 'p'
+            //   (part_name == part1_name == p1_name == v1_p1_name).
+            const PART_KEY = /^(?:v(\d+)_)?(?:(?:part|p)(\d+)?_)(name|no|brand|qty)$/i;
+            const VEH_KEY  = /^(?:v(\d+)_)?(vehicle|vin)$/i;
+
+            const vehMap = {}; // vehicleIndex -> { name, vin, parts: { partIndex -> { name, partNo, manufacturer, qty } } }
+            let hasVehicleParams = false;
+
+            urlParams.forEach((rawVal, key) => {
+                const value = (rawVal || '');
+                let m;
+
+                if ((m = key.match(PART_KEY))) {
+                    const vi = parseInt(m[1] || '1', 10) || 1;
+                    const pi = parseInt(m[2] || '1', 10) || 1;
+                    const field = m[3].toLowerCase();
+
+                    if (!vehMap[vi]) vehMap[vi] = { name: '', vin: '', parts: {} };
+                    if (!vehMap[vi].parts[pi]) vehMap[vi].parts[pi] = { name: '', partNo: '', manufacturer: '', qty: '' };
+
+                    const p = vehMap[vi].parts[pi];
+                    if (field === 'name')       p.name = value;
+                    else if (field === 'no')    p.partNo = value;
+                    else if (field === 'brand') p.manufacturer = value;
+                    else if (field === 'qty')   p.qty = value;
+
+                    hasVehicleParams = true;
+                } else if ((m = key.match(VEH_KEY))) {
+                    const vi = parseInt(m[1] || '1', 10) || 1;
+                    const field = m[2].toLowerCase();
+
+                    if (!vehMap[vi]) vehMap[vi] = { name: '', vin: '', parts: {} };
+                    if (field === 'vehicle') vehMap[vi].name = value;
+                    else if (field === 'vin') vehMap[vi].vin = value;
+
+                    hasVehicleParams = true;
+                }
+            });
+
+            if (hasVehicleParams) {
+                const vehIndices = Object.keys(vehMap).map(n => parseInt(n, 10)).sort((a, b) => a - b);
+                const maxVehIndex = vehIndices[vehIndices.length - 1] || 1;
+                const built = [];
+
+                for (let i = 1; i <= maxVehIndex; i++) {
+                    const src = vehMap[i] || { name: '', vin: '', parts: {} };
+                    const partIndices = Object.keys(src.parts).map(n => parseInt(n, 10)).sort((a, b) => a - b);
+
+                    // Guarantee at least one part row per vehicle (matches the empty default).
+                    if (partIndices.length === 0) {
+                        partIndices.push(1);
+                        src.parts[1] = { name: '', partNo: '', manufacturer: '', qty: '' };
+                    }
+
+                    const parts = partIndices.map(pi => {
+                        const pp = src.parts[pi] || {};
+                        const parsedQty = parseInt(pp.qty, 10);
+                        return {
+                            id: Date.now() + i * 100 + pi,
+                            name: (pp.name || '').trim(),
+                            partNo: (pp.partNo || '').trim(),
+                            manufacturer: (pp.manufacturer || '').trim(),
+                            qty: isNaN(parsedQty) ? 1 : Math.min(100, Math.max(1, parsedQty)),
+                            status: 'I'
+                        };
+                    });
+
+                    built.push({
+                        id: Date.now() + i,
+                        name: (src.name || '').trim(),
+                        vin: (src.vin || '').trim(),
+                        parts: parts
+                    });
+                }
+
+                if (built.length) {
+                    vehicles = built;
+                    renderVehicles();
                 }
             }
         }
