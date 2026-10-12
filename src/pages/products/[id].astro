@@ -1,0 +1,724 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getAllProducts } from '../../lib/products';
+
+export async function getStaticPaths() {
+  // eBay-synced listings plus the Direct products managed in Sveltia CMS.
+  const products = await getAllProducts();
+  return products.map((product) => ({
+    params: { id: product.id },
+    props: { product },
+  }));
+}
+
+/**
+ * Matches an eBay *marketplace* URL — `ebay.com`, `www.ebay.com`, `cgi.ebay.com`,
+ * `apps.payments.ebay.com` — but deliberately NOT the `i.ebayimg.com` or
+ * `ir.ebaystatic.com` CDNs, which is where the description photos and the share
+ * widget's scripts live. (`ebayimg`/`ebaystatic` are different host labels, so
+ * the `\.ebay\.` boundary never matches them.)
+ */
+const EBAY_MARKETPLACE_URL = /(?:^|\/\/|\.)ebay\.[a-z]/i;
+
+/** True when an `<a ...>` tag hyperlinks to an eBay marketplace page. */
+function isEbayHref(anchorTag: string): boolean {
+  const href = (anchorTag.match(/href\s*=\s*["']?([^"'\s>]+)/i) ?? [])[1];
+  return Boolean(href) && EBAY_MARKETPLACE_URL.test(href);
+}
+
+/**
+ * True when an attribute *value* is an eBay marketplace URL — not prose, and not
+ * a CDN asset. eBay's share widget puts the listing URL in a non-`href`
+ * attribute (`etafshareurl="https://www.ebay.com/itm/…"`), so those need
+ * stripping separately from the anchor unwrapping.
+ */
+function isEbayUrlValue(value: string): boolean {
+  const trimmed = value.trim();
+  const looksLikeUrl = /^(?:https?:)?\/\//i.test(trimmed) || /^(?:www\.)?ebay\./i.test(trimmed);
+  return looksLikeUrl && EBAY_MARKETPLACE_URL.test(trimmed);
+}
+
+/**
+ * Normalises the raw eBay / Google-Sheets description markup before it is
+ * injected with `set:html`.
+ *
+ * The markup arrives littered with inline `background-color` / `color`
+ * declarations (10 of them even use `!important`), presentational `bgcolor`
+ * attributes, "spacer" cells whose text colour deliberately matches their own
+ * background, and 668 hyperlinks back to eBay. So we:
+ *   1. drop `!important` from inline styles, letting our dark overrides win,
+ *   2. drop `bgcolor` attributes,
+ *   3. unwrap every hyperlink pointing back at eBay, so no description can send
+ *      a customer off-site (the inner markup is kept, which means eBay-linked
+ *      photos still render — they just stop being clickable),
+ *   4. drop any remaining attribute whose value is an eBay marketplace URL,
+ *      which covers the share widget's non-`href` `etafshareurl` attributes,
+ *      so not a single eBay link survives, and
+ *   5. tag deliberately-blank spacer cells so the dark theme keeps them blank.
+ */
+function neutralizeLegacyColors(html: string): string {
+  const cleaned = html
+    .replace(/!important/gi, '')
+    .replace(/\sbgcolor\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, '')
+    .replace(/<a\b[^>]*>[\s\S]*?<\/a>/gi, (anchor: string) =>
+      isEbayHref(anchor) ? anchor.replace(/^<a\b[^>]*>/i, '').replace(/<\/a>\s*$/i, '') : anchor
+    )
+    .replace(
+      /\s([a-zA-Z_:][-\w:.]*)\s*=\s*(?:"([^"]*)"|'([^']*)')/g,
+      (match: string, _name: string, doubleQuoted?: string, singleQuoted?: string) =>
+        isEbayUrlValue(doubleQuoted ?? singleQuoted ?? '') ? '' : match
+    );
+
+  return cleaned.replace(/<t([dh])\b([^>]*)>/gi, (match, kind: string, attrs: string) => {
+    const style = (attrs.match(/style\s*=\s*"([^"]*)"/i) ?? attrs.match(/style\s*=\s*'([^']*)'/i))?.[1];
+    if (!style) return match;
+
+    const color = (style.match(/(?:^|;)\s*color\s*:\s*([^;]+)/i) ?? [])[1];
+    const background = (style.match(/background-color\s*:\s*([^;]+)/i) ?? [])[1];
+    if (!color || !background) return match;
+    if (color.trim().toLowerCase() !== background.trim().toLowerCase()) return match;
+
+    const existing = (attrs.match(/class\s*=\s*"([^"]*)"/i) ?? [])[1];
+    const nextAttrs = existing
+      ? attrs.replace(/class\s*=\s*"[^"]*"/i, `class="${existing} epw-blank"`)
+      : `${attrs} class="epw-blank"`;
+
+    return `<t${kind}${nextAttrs}>`;
+  });
+}
+
+const { product } = Astro.props;
+
+/**
+ * Variants (Direct products only). The first option is selected on first paint,
+ * so the price, SKU and action links are already correct before any JavaScript
+ * runs — the script below only has to update them on click.
+ */
+const variants = product.variants;
+const selectedVariant = variants[0] ?? null;
+
+const selectedSku = selectedVariant?.sku ?? product.sku;
+const selectedPriceLabel = selectedVariant?.priceLabel ?? product.priceLabel;
+const selectedPartNo = selectedVariant?.sku ?? product.mpn ?? product.sku;
+
+const hasStock = typeof product.stock === 'number' && product.stock > 0;
+const stockLabel =
+  typeof product.stock === 'number'
+    ? `${product.stock} in stock`
+    : product.condition === 'New'
+      ? 'Available'
+      : 'Check availability';
+
+// Primary image first, then the full de-duplicated gallery. Direct products
+// have no photos at all, so this can legitimately be empty.
+const gallery = (product.images.length ? product.images : [product.image]).filter(
+  (src): src is string => Boolean(src)
+);
+
+// Full Technical Specs table, straight from `item.specifics`.
+const specifics = Object.entries(product.specifics)
+  .filter(([, value]) => value !== null && value !== undefined && value !== '')
+  .map(([key, value]) => [key, String(value)] as const);
+
+// Both actions stay on-site: they deep-link into the inquiry form with the part
+// pre-filled. Only the `part_no` changes per variant, so the shared prefix is
+// handed to the client as `data-href-template`.
+const partName = encodeURIComponent(product.title);
+const inquireHrefTemplate = `/inquiry.html?part_name=${partName}&part_no=`;
+const orderHrefTemplate = `/inquiry.html?intent=order&part_name=${partName}&part_no=`;
+
+const inquireHref = `${inquireHrefTemplate}${encodeURIComponent(selectedPartNo)}`;
+const orderHref = `${orderHrefTemplate}${encodeURIComponent(selectedPartNo)}`;
+
+// eBay descriptions are legacy HTML needing normalisation; Direct ones are
+// plain text written in the CMS.
+const descriptionHtml = product.descriptionIsHtml
+  ? neutralizeLegacyColors(product.description)
+  : '';
+---
+
+<BaseLayout
+  title={`${product.title} — EuroPartsWest`}
+  description={`${product.title}. ${product.brand ?? ''} ${product.condition ?? ''} — ${selectedPriceLabel}. SKU ${selectedSku}.`}
+  containerMaxWidth="1350px"
+>
+  <div class="container detail-wrap">
+    <a class="back-link" href="/store">&larr; Back to Inventory</a>
+
+    <div class="detail-grid">
+      <div class="detail-media">
+        <div class="gallery-main">
+          {
+            gallery.length > 0 ? (
+              <img id="galleryMain" src={gallery[0]} alt={product.title} />
+            ) : (
+              <div class="gallery-placeholder">
+                <span>EuroPartsWest</span>
+                <small>Photos coming soon</small>
+              </div>
+            )
+          }
+        </div>
+
+        {
+          gallery.length > 1 && (
+            <div class="gallery-thumbs" id="galleryThumbs">
+              {gallery.map((src, index) => (
+                <button
+                  type="button"
+                  class="thumb"
+                  data-src={src}
+                  aria-label={`View image ${index + 1} of ${gallery.length}`}
+                >
+                  <img src={src} alt="" loading="lazy" decoding="async" />
+                </button>
+              ))}
+            </div>
+          )
+        }
+      </div>
+
+      <div class="detail-info">
+        <h1 class="detail-title">{product.title}</h1>
+        <p class="detail-price" id="detailPrice">{selectedPriceLabel}</p>
+
+        <span class:list={['stock-badge', { 'in-stock': hasStock }]}>{stockLabel}</span>
+
+        <ul class="detail-facts">
+          {product.brand && <li><span>Brand</span><strong>{product.brand}</strong></li>}
+          {product.condition && <li><span>Condition</span><strong>{product.condition}</strong></li>}
+          <li><span>SKU</span><strong id="detailSku">{selectedSku}</strong></li>
+          {product.mpn && <li><span>MPN</span><strong>{product.mpn}</strong></li>}
+          {product.category && <li><span>Category</span><strong>{product.category}</strong></li>}
+          {
+            product.source === 'Direct' && (
+              <li>
+                <span>Source</span>
+                <strong>Direct inventory</strong>
+              </li>
+            )
+          }
+        </ul>
+
+        {
+          variants.length > 0 && (
+            <div class="variants">
+              <span class="variants-label" id="variantsLabel">
+                Choose an option
+              </span>
+              <div class="variant-list" role="group" aria-labelledby="variantsLabel">
+                {variants.map((variant, index) => (
+                  <button
+                    type="button"
+                    class:list={['variant-pill', { active: index === 0 }]}
+                    data-variant-sku={variant.sku}
+                    data-variant-price={variant.priceLabel ?? ''}
+                    aria-pressed={index === 0 ? 'true' : 'false'}
+                  >
+                    <span class="variant-name">{variant.optionName}</span>
+                    {variant.priceLabel && <span class="variant-price">{variant.priceLabel}</span>}
+                    {typeof variant.stock === 'number' && (
+                      <span class="variant-stock">
+                        {variant.stock > 0 ? `${variant.stock} in stock` : 'Out of stock'}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )
+        }
+
+        <div class="detail-actions">
+          <a
+            class="btn btn-lg"
+            id="inquireBtn"
+            data-href-template={inquireHrefTemplate}
+            href={inquireHref}>Inquire About This Part</a
+          >
+          <a
+            class="btn btn-lg btn-outline"
+            id="orderBtn"
+            data-href-template={orderHrefTemplate}
+            href={orderHref}>Order Direct</a
+          >
+        </div>
+      </div>
+    </div>
+
+    {
+      specifics.length > 0 && (
+        <section class="specs-box">
+          <h2>Technical Specs</h2>
+          <table class="specs-table">
+            <tbody>
+              {specifics.map(([key, value]) => (
+                <tr>
+                  <th scope="row">{key}</th>
+                  <td>{value}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      )
+    }
+
+    <section class="description-container">
+      <h2>Full Description</h2>
+      {
+        product.descriptionIsHtml ? (
+          <Fragment set:html={descriptionHtml} />
+        ) : product.description ? (
+          <p class="description-text">{product.description}</p>
+        ) : (
+          <p>No description provided.</p>
+        )
+      }
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+  .detail-wrap {
+    padding: 40px 0 20px;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 24px;
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+
+  .detail-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+    gap: 40px;
+    align-items: start;
+  }
+
+  .gallery-main {
+    background: var(--card-bg);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 380px;
+  }
+
+  .gallery-main img {
+    max-width: 100%;
+    max-height: 540px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    display: block;
+  }
+
+  .gallery-thumbs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 15px;
+  }
+
+  .thumb {
+    width: 72px;
+    height: 72px;
+    padding: 0;
+    border: 2px solid var(--border-color);
+    border-radius: 6px;
+    overflow: hidden;
+    cursor: pointer;
+    background: var(--card-bg);
+    transition: border-color 0.2s;
+  }
+
+  .thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .thumb:hover,
+  .thumb.active {
+    border-color: var(--primary);
+  }
+
+  .detail-title {
+    font-size: 1.8rem;
+    line-height: 1.3;
+    margin-bottom: 15px;
+  }
+
+  .detail-price {
+    font-size: 2rem;
+    color: var(--primary);
+    font-weight: 700;
+    margin-bottom: 15px;
+  }
+
+  .stock-badge {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+    background: rgba(200, 16, 46, 0.12);
+    color: var(--primary);
+    border: 1px solid rgba(200, 16, 46, 0.4);
+  }
+
+  .stock-badge.in-stock {
+    background: rgba(39, 174, 96, 0.12);
+    color: #27ae60;
+    border-color: rgba(39, 174, 96, 0.45);
+  }
+
+  .detail-facts {
+    list-style: none;
+    margin: 0 0 25px;
+    padding: 0;
+    border-top: 1px solid var(--border-color);
+  }
+
+  .detail-facts li {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.95rem;
+  }
+
+  .detail-facts span {
+    color: var(--grey);
+    flex: 0 0 auto;
+  }
+
+  .detail-facts strong {
+    text-align: right;
+    word-break: break-word;
+  }
+
+  .detail-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .btn-lg {
+    padding: 16px 30px;
+    font-size: 1.05rem;
+    text-align: center;
+  }
+
+  .btn-outline {
+    background: transparent;
+    color: var(--primary);
+    border: 1px solid var(--primary);
+  }
+
+  .btn-outline:hover {
+    background: var(--primary);
+    color: var(--white);
+  }
+
+  .specs-box {
+    margin-top: 40px;
+    background: var(--card-bg);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    padding: 30px;
+  }
+
+  .specs-box h2 {
+    color: var(--primary);
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+  }
+
+  .specs-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .specs-table th,
+  .specs-table td {
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.92rem;
+    vertical-align: top;
+  }
+
+  .specs-table th {
+    width: 38%;
+    color: var(--grey);
+    font-weight: 600;
+  }
+
+  .specs-table td {
+    word-break: break-word;
+  }
+
+  @media (max-width: 900px) {
+    .detail-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .gallery-main {
+      min-height: 260px;
+    }
+  }
+
+  /* ------------------------------------------------------------------------
+     Full description — raw eBay / Google-Sheets HTML injected via set:html.
+     Scoped styles never reach injected markup, so everything here is :global().
+     ------------------------------------------------------------------------ */
+  :global(.description-container) {
+    background: var(--card-bg);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    padding: 30px;
+    margin-top: 40px;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  :global(.description-container h2) {
+    color: var(--primary);
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+  }
+
+  :global(.description-container img) {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+
+  :global(.description-container a) {
+    color: var(--primary);
+  }
+
+  /* --- Neutralise the legacy eBay table colours for dark mode -------------- */
+  :global(.description-container table) {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-collapse: collapse !important;
+    border-spacing: 0 !important;
+    margin: 0 0 16px !important;
+    background-color: transparent !important;
+  }
+
+  :global(.description-container td),
+  :global(.description-container th) {
+    background-color: rgba(255, 255, 255, 0.03) !important;
+    color: #e0e0e0 !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    padding: 8px 10px !important;
+    vertical-align: top;
+    font-size: 0.9rem;
+    overflow-wrap: anywhere;
+  }
+
+  /* Cells carrying a legacy `bgcolor` attribute. */
+  :global(.description-container [bgcolor]) {
+    background-color: rgba(255, 255, 255, 0.03) !important;
+  }
+
+  /* `<font color>` is a child element, so the cell colour never reached it.
+     89% of these are already white; inheriting keeps the dark ones legible. */
+  :global(.description-container font[color]) {
+    color: inherit !important;
+  }
+
+  /* "Spacer" cells whose text colour matched their own background (tagged at
+     build time by neutralizeLegacyColors) must stay invisible. */
+  :global(.description-container .epw-blank) {
+    color: transparent !important;
+  }
+
+  /* Legacy "IN STOCK" cells are bright pastel green — restyle as a subtle badge
+     (the cell is tagged with .stock-cell by the script below). */
+  :global(.description-container td.stock-cell),
+  :global(.description-container th.stock-cell) {
+    background-color: rgba(39, 174, 96, 0.18) !important;
+    color: #7ee2a8 !important;
+    border-color: rgba(39, 174, 96, 0.45) !important;
+    font-weight: 700 !important;
+    text-align: center;
+  }
+
+  @media (max-width: 768px) {
+    :global(.description-container) {
+      padding: 18px;
+    }
+  }
+
+  /* ------------------------------------------------------------------------
+     Variant selector — Direct products with options
+     ------------------------------------------------------------------------ */
+  .variants {
+    margin-bottom: 22px;
+  }
+
+  .variants-label {
+    display: block;
+    margin-bottom: 10px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--grey);
+  }
+
+  .variant-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .variant-pill {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    padding: 10px 16px;
+    font: inherit;
+    font-size: 0.9rem;
+    text-align: left;
+    color: var(--text-color);
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: border-color 0.2s, background-color 0.2s;
+  }
+
+  .variant-pill:hover {
+    border-color: var(--primary);
+  }
+
+  .variant-pill.active {
+    border-color: var(--primary);
+    background: rgba(200, 16, 46, 0.12);
+  }
+
+  .variant-name {
+    font-weight: 600;
+  }
+
+  .variant-price {
+    color: var(--primary);
+    font-weight: 700;
+    font-size: 0.85rem;
+  }
+
+  .variant-stock {
+    color: var(--grey);
+    font-size: 0.75rem;
+  }
+
+  /* Shown when a Direct product has no photos yet. */
+  .gallery-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    min-height: 340px;
+    color: var(--grey);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .gallery-placeholder small {
+    font-size: 0.7rem;
+    letter-spacing: 0.5px;
+    opacity: 0.7;
+  }
+
+  /* Plain-text descriptions, as written in Sveltia CMS. */
+  .description-text {
+    white-space: pre-wrap;
+  }
+</style>
+
+<script>
+  // Interactive photo gallery — click a thumbnail to swap the main image.
+  const mainImage = document.getElementById('galleryMain') as HTMLImageElement | null;
+  const thumbs = Array.from(document.querySelectorAll<HTMLButtonElement>('.thumb'));
+
+  if (mainImage && thumbs.length > 0) {
+    thumbs[0].classList.add('active');
+    for (const thumb of thumbs) {
+      thumb.addEventListener('click', () => {
+        const src = thumb.dataset.src;
+        if (!src) return;
+        mainImage.src = src;
+        for (const other of thumbs) other.classList.toggle('active', other === thumb);
+      });
+    }
+  }
+
+  // The legacy tables flag stock with a bright pastel cell. Retag those cells so
+  // the dark theme can render them as a subtle green badge instead.
+  const description = document.querySelector('.description-container');
+  if (description) {
+    for (const cell of description.querySelectorAll('td, th')) {
+      const text = (cell.textContent ?? '').replace(/\s+/g, ' ').trim();
+      if (/\bin stock\b/i.test(text) && !/out of stock/i.test(text)) {
+        cell.classList.add('stock-cell');
+      }
+    }
+  }
+
+  // --- Variant selector -------------------------------------------------------
+  // The first option is already selected in the server-rendered markup, so this
+  // only has to swap the price, the SKU and the `part_no` on the two action
+  // links whenever a different pill is clicked.
+  const priceEl = document.getElementById('detailPrice');
+  const skuEl = document.getElementById('detailSku');
+  const pills = Array.from(document.querySelectorAll<HTMLButtonElement>('.variant-pill'));
+  const hrefTargets = Array.from(
+    document.querySelectorAll<HTMLAnchorElement>('[data-href-template]')
+  );
+
+  for (const pill of pills) {
+    pill.addEventListener('click', () => {
+      const sku = pill.dataset.variantSku ?? '';
+      const price = pill.dataset.variantPrice;
+
+      if (priceEl && price) priceEl.textContent = price;
+      if (skuEl && sku) skuEl.textContent = sku;
+
+      for (const link of hrefTargets) {
+        const template = link.dataset.hrefTemplate;
+        if (template) link.href = template + encodeURIComponent(sku);
+      }
+
+      for (const other of pills) {
+        const active = other === pill;
+        other.classList.toggle('active', active);
+        other.setAttribute('aria-pressed', active ? 'true' : 'false');
+      }
+    });
+  }
+</script>

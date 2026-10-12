@@ -1,0 +1,4 @@
+# Direct inventory managed with Sveltia CMS (/admin/).
+#
+# One Markdown file per product, named after its SKU. eBay-synced inventory is
+# kept separately in src/data/ebay-products.json and is not edited here.

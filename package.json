@@ -10,6 +10,14 @@
     "includeRootFiles": true
   },
   "scripts": {
+    "dev": "astro dev",
+    "clean": "node scripts/clean-dist.js",
+    "build": "node scripts/clean-dist.js && astro build",
+    "preview": "astro preview",
     "bundle": "node scripts/export-bundle.js"
+  },
+  "dependencies": {
+    "@astrojs/cloudflare": "^14.3.4",
+    "astro": "^7.3.8"
   }
 }

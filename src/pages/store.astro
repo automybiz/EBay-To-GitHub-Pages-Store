@@ -1,0 +1,214 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getAllProducts, buildSearchIndex } from '../lib/products';
+
+// The eBay-synced listings merged with the Direct products managed in Sveltia
+// CMS (/admin/). Both sources come back in one normalised shape.
+const products = await getAllProducts();
+
+const catalog = products.map((product) => ({
+  ...product,
+  search: buildSearchIndex(product),
+}));
+
+// Populate the source filter from whatever is actually in the catalogue.
+const sources = [...new Set(products.map((product) => product.source))].sort();
+
+const heroSlides = [
+  'https://i.ebayimg.com/images/g/zFoAAOSwq9FoUfPJ/s-l1600.jpg',
+  'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=1200',
+  'https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?auto=format&fit=crop&q=80&w=1200',
+];
+---
+
+<BaseLayout
+  title={`Inventory — EuroPartsWest Store (${products.length} parts)`}
+  description="Browse our full inventory of OEM and performance Porsche parts. Search by part number, interchange number or keyword."
+>
+  <section class="hero" id="hero">
+    <div class="hero-slides">
+      {
+        heroSlides.map((slide, index) => (
+          <div
+            class:list={['hero-slide', { active: index === 0 }]}
+            style={`background-image: url('${slide}')`}
+          />
+        ))
+      }
+    </div>
+    <div class="hero-content">
+      <div class="container">
+        <h1>Premium Porsche Parts</h1>
+        <p>Specializing in OEM and performance parts for your 911, GT3, and classic Porsche models.</p>
+        <a href="#products" class="btn">Shop Now</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="products" class="products container">
+    <div class="section-header">
+      <h2>Our Inventory</h2>
+      <div class="search-bar">
+        <input
+          type="text"
+          id="productSearch"
+          placeholder="Search title, SKU or interchange #..."
+          autocomplete="off"
+        />
+        <select id="sourceFilter" class="filter-select" aria-label="Filter by source">
+          <option value="all">All Sources</option>
+          {sources.map((source) => <option value={source}>{source}</option>)}
+        </select>
+        <select id="productSort" class="filter-select" aria-label="Sort products">
+          <option value="featured">Sort: Featured</option>
+          <option value="price-asc">Price: Low to High</option>
+          <option value="price-desc">Price: High to Low</option>
+          <option value="title-asc">Title: A – Z</option>
+          <option value="brand-asc">Brand: A – Z</option>
+        </select>
+      </div>
+    </div>
+
+    <p class="results-count" id="resultsCount">
+      Showing {products.length} of {products.length} parts
+    </p>
+
+    <div class="product-grid" id="productGrid">
+      {
+        catalog.map((item) => (
+          <article
+            class="product-card"
+            data-search={item.search}
+            data-price={String(item.price ?? '')}
+            data-title={item.title.toLowerCase()}
+            data-brand={(item.brand ?? '').toLowerCase()}
+            data-source={item.source}
+          >
+            <a href={`/products/${item.id}`} class="product-img-link" aria-hidden="true" tabindex="-1">
+              {item.image ? (
+                <img
+                  src={item.image}
+                  alt={item.title}
+                  class="product-img"
+                  loading="lazy"
+                  decoding="async"
+                />
+              ) : (
+                <div class="product-img product-img--empty">
+                  <span>EuroPartsWest</span>
+                </div>
+              )}
+            </a>
+            <div class="product-info">
+              <span class:list={['product-badge', { 'in-stock': typeof item.stock === 'number' }]}>
+                {typeof item.stock === 'number'
+                  ? `${item.stock} in stock`
+                  : item.condition || 'Available'}
+              </span>
+              <h3 class="product-title">
+                <a href={`/products/${item.id}`}>{item.title}</a>
+              </h3>
+              <p class="product-price">{item.priceLabel}</p>
+              <div class="product-meta">
+                <span>SKU: {item.sku}</span>
+                {item.brand && (
+                  <>
+                    <br />
+                    <span>Brand: {item.brand}</span>
+                  </>
+                )}
+                <br />
+                <span>Source: {item.source}</span>
+                {item.variants.length > 0 && (
+                  <>
+                    <br />
+                    <span>
+                      {item.variants.length} variant{item.variants.length === 1 ? '' : 's'}
+                    </span>
+                  </>
+                )}
+              </div>
+              <a href={`/products/${item.id}`} class="btn btn-block">View Details</a>
+            </div>
+          </article>
+        ))
+      }
+    </div>
+
+    <p class="no-results" id="noResults" hidden>No products found. Try a different search term.</p>
+  </section>
+</BaseLayout>
+
+<script>
+  // --- Hero slideshow (ported from assets/js/app.js) ---
+  const slides = Array.from(document.querySelectorAll<HTMLElement>('.hero-slide'));
+  if (slides.length > 1) {
+    let current = 0;
+    setInterval(() => {
+      slides[current].classList.remove('active');
+      current = (current + 1) % slides.length;
+      slides[current].classList.add('active');
+    }, 5000);
+  }
+
+  // --- Real-time search + sorting ---
+  const grid = document.getElementById('productGrid');
+  const searchInput = document.getElementById('productSearch') as HTMLInputElement | null;
+  const sortSelect = document.getElementById('productSort') as HTMLSelectElement | null;
+  const sourceSelect = document.getElementById('sourceFilter') as HTMLSelectElement | null;
+  const countEl = document.getElementById('resultsCount');
+  const emptyEl = document.getElementById('noResults');
+
+  if (grid) {
+    // Cards are pre-rendered in the HTML; we filter and re-order the DOM nodes
+    // instead of re-rendering templates, so the page works before JS loads too.
+    const cards = Array.from(grid.querySelectorAll<HTMLElement>('.product-card'));
+    const total = cards.length;
+    let term = '';
+    let source = 'all';
+
+    const priceOf = (card: HTMLElement): number => {
+      const value = Number.parseFloat(card.dataset.price ?? '');
+      return Number.isFinite(value) ? value : Number.POSITIVE_INFINITY;
+    };
+
+    const comparators: Record<string, (a: HTMLElement, b: HTMLElement) => number> = {
+      'price-asc': (a, b) => priceOf(a) - priceOf(b),
+      'price-desc': (a, b) => priceOf(b) - priceOf(a),
+      'title-asc': (a, b) => (a.dataset.title ?? '').localeCompare(b.dataset.title ?? ''),
+      'brand-asc': (a, b) =>
+        (a.dataset.brand ?? '').localeCompare(b.dataset.brand ?? '') ||
+        (a.dataset.title ?? '').localeCompare(b.dataset.title ?? ''),
+    };
+
+    const apply = () => {
+      const sort = sortSelect?.value ?? 'featured';
+      const comparator = comparators[sort];
+      const ordered = comparator ? [...cards].sort(comparator) : cards;
+
+      let visible = 0;
+      for (const card of ordered) {
+        const matchesTerm = !term || (card.dataset.search ?? '').includes(term);
+        const matchesSource = source === 'all' || card.dataset.source === source;
+        const matches = matchesTerm && matchesSource;
+        card.hidden = !matches;
+        if (matches) visible += 1;
+        grid.appendChild(card);
+      }
+
+      if (countEl) countEl.textContent = `Showing ${visible} of ${total} parts`;
+      if (emptyEl) emptyEl.hidden = visible !== 0;
+    };
+
+    searchInput?.addEventListener('input', () => {
+      term = searchInput.value.trim().toLowerCase();
+      apply();
+    });
+    sortSelect?.addEventListener('change', apply);
+    sourceSelect?.addEventListener('change', () => {
+      source = sourceSelect.value;
+      apply();
+    });
+  }
+</script>
+

@@ -1,0 +1,442 @@
+/* ==========================================================================
+   EuroPartsWest — Global storefront theme
+   Ported from assets/css/styles.css (dark "Porsche" theme) + store.html
+   ========================================================================== */
+
+:root {
+    --primary: #c8102e; /* Red for auto parts vibe */
+    --secondary: #333;
+    --light: #f4f4f4;
+    --dark: #1a1a1a;
+    --white: #ffffff;
+    --grey: #888;
+    --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --bg-color: var(--light);
+    --card-bg: var(--white);
+    --text-color: var(--secondary);
+    --nav-bg: var(--white);
+    --footer-bg: var(--light);
+    --footer-text: var(--secondary);
+    --border-color: #ddd;
+    --logo-height: 111px;
+    --logo-padding: 0px;
+    --logo-filter: none;
+}
+
+[data-theme='dark'] {
+    --secondary: #f4f4f4;
+    --light: #1a1a1a;
+    --dark: #f4f4f4;
+    --white: #ffffff; /* Keep white as white for hero text */
+    --bg-color: #121212;
+    --card-bg: #1e1e1e;
+    --text-color: #e0e0e0;
+    --nav-bg: #1e1e1e;
+    --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    --footer-bg: #1e1e1e;
+    --footer-text: #e0e0e0;
+    --border-color: #2f2f2f;
+    --logo-filter: none;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    line-height: 1.6;
+    color: var(--text-color);
+    background-color: var(--bg-color);
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.container {
+    max-width: var(--container-max, 1200px);
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+body > header {
+    background: var(--nav-bg);
+    box-shadow: var(--shadow);
+    padding: 20px 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    transition: background-color 0.3s;
+}
+
+nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+}
+
+.logo {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    padding: var(--logo-padding);
+}
+
+.logo img {
+    height: var(--logo-height);
+    width: auto;
+    display: block;
+    filter: var(--logo-filter);
+}
+
+.logo a {
+    text-decoration: none;
+    border: none;
+}
+
+.nav-links {
+    display: flex;
+    list-style: none;
+    margin-left: auto;
+}
+
+.nav-links li {
+    margin-left: 30px;
+}
+
+.nav-links a {
+    text-decoration: none;
+    color: var(--text-color);
+    font-weight: 600;
+    transition: color 0.3s;
+}
+
+.nav-links a:hover {
+    color: var(--primary);
+}
+
+/* --------------------------------------------------------------------------
+   Hero
+   -------------------------------------------------------------------------- */
+.hero {
+    position: relative;
+    height: 450px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: var(--white);
+}
+
+.hero-slides {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+.hero-slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
+}
+
+.hero-slide.active {
+    opacity: 1;
+}
+
+.hero-slide::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6));
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+}
+
+.hero h1 {
+    font-size: 3rem;
+    margin-bottom: 10px;
+}
+
+.hero p {
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+    opacity: 0.9;
+}
+
+/* --------------------------------------------------------------------------
+   Buttons
+   -------------------------------------------------------------------------- */
+.btn {
+    display: inline-block;
+    background: var(--primary);
+    color: var(--white);
+    padding: 12px 30px;
+    text-decoration: none;
+    border-radius: 5px;
+    font-weight: 600;
+    border: 1px solid var(--primary);
+    transition: background 0.3s, color 0.3s, border-color 0.3s;
+}
+
+.btn:hover {
+    background: #a00d25;
+}
+
+.btn-block {
+    width: 100%;
+    text-align: center;
+}
+
+/* --------------------------------------------------------------------------
+   Catalog / product grid
+   -------------------------------------------------------------------------- */
+.products {
+    padding: 60px 0;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.search-bar {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.search-bar input,
+.filter-select {
+    padding: 10px 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    font-size: 1rem;
+    background-color: var(--card-bg);
+    color: var(--text-color);
+}
+
+.search-bar input {
+    width: 300px;
+}
+
+.filter-select {
+    cursor: pointer;
+}
+
+.results-count {
+    color: var(--grey);
+    font-size: 0.9rem;
+    margin-bottom: 20px;
+}
+
+.no-results {
+    grid-column: 1 / -1;
+    padding: 40px;
+    text-align: center;
+    background: var(--card-bg);
+    border-radius: 8px;
+    border: 1px solid var(--primary);
+}
+
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 30px;
+}
+
+.product-card {
+    background: var(--card-bg);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: transform 0.3s, background-color 0.3s;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+}
+
+/* `display: flex` above would otherwise win over the UA `[hidden]` rule. */
+.product-card[hidden] {
+    display: none;
+}
+
+.product-img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    background: #eee;
+    display: block;
+}
+
+/* Direct products (managed in Sveltia CMS) don't have photos yet. */
+.product-img--empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #1b1b1b, #2b2b2b);
+    color: var(--grey);
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.product-info {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.product-title {
+    font-size: 1.1rem;
+    line-height: 1.35;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.product-title a {
+    color: var(--text-color);
+    text-decoration: none;
+}
+
+.product-title a:hover {
+    color: var(--primary);
+}
+
+.product-price {
+    font-size: 1.25rem;
+    color: var(--primary);
+    font-weight: 700;
+    margin-bottom: 15px;
+}
+
+.product-meta {
+    font-size: 0.85rem;
+    color: var(--grey);
+    margin-bottom: 15px;
+    margin-top: auto;
+    word-break: break-word;
+}
+
+.product-badge {
+    display: inline-block;
+    align-self: flex-start;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-bottom: 10px;
+    background: rgba(200, 16, 46, 0.12);
+    color: var(--primary);
+    border: 1px solid rgba(200, 16, 46, 0.4);
+}
+
+.product-badge.in-stock {
+    background: rgba(39, 174, 96, 0.12);
+    color: #27ae60;
+    border-color: rgba(39, 174, 96, 0.45);
+}
+
+/* --------------------------------------------------------------------------
+   Footer + theme toggle
+   -------------------------------------------------------------------------- */
+footer {
+    background: var(--footer-bg);
+    color: var(--footer-text);
+    padding: 40px 0;
+    text-align: center;
+    margin-top: 60px;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.theme-toggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    margin-left: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-color);
+    font-size: 1.2rem;
+    transition: color 0.3s;
+}
+
+.theme-toggle:hover {
+    color: var(--primary);
+}
+
+/* --------------------------------------------------------------------------
+   The "Full Description" block on /products/<id> injects raw eBay/Sheets HTML,
+   so its (heavy) dark-mode overrides live with that page instead of here.
+   -------------------------------------------------------------------------- */
+
+/* --------------------------------------------------------------------------
+   Responsive
+   -------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+    .hero h1 {
+        font-size: 2rem;
+    }
+
+    .search-bar {
+        width: 100%;
+    }
+
+    .search-bar input {
+        width: 100%;
+    }
+
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .nav-links {
+        margin-bottom: 10px;
+    }
+
+    .theme-toggle {
+        margin-left: 0;
+        margin-top: 10px;
+    }
+
+    nav {
+        flex-wrap: wrap;
+    }
+}
+
+
