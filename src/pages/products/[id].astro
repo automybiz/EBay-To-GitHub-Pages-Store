@@ -127,14 +127,24 @@ const specifics = Object.entries(product.specifics)
   .map(([key, value]) => [key, String(value)] as const);
 
 // Both actions stay on-site: they deep-link into the inquiry form with the part
-// pre-filled. Only the `part_no` changes per variant, so the shared prefix is
-// handed to the client as `data-href-template`.
-const partName = encodeURIComponent(product.title);
-const inquireHrefTemplate = `/inquiry.html?part_name=${partName}&part_no=`;
-const orderHrefTemplate = `/inquiry.html?intent=order&part_name=${partName}&part_no=`;
+// pre-filled. The parser in `/inquiry.html` understands `part_name`, `part_no`,
+// `part_brand` and `part_qty`, so we hand it everything we know: the title, the
+// selected variant's SKU (falling back to MPN then SKU), the brand and a qty of 1.
+// Because both `part_name` and `part_no` change when a variant is picked, the
+// query is kept as a `{{name}}`/`{{no}}` template in `data-href-template` and
+// resolved in the variant switcher below.
+const productTitle = product.title;
+const partBrand = product.brand || '';
+const sharedQuery = `part_brand=${encodeURIComponent(partBrand)}&part_qty=1`;
+const inquireHrefTemplate = `/inquiry.html?part_name={{name}}&part_no={{no}}&${sharedQuery}`;
+const orderHrefTemplate = `/inquiry.html?intent=order&part_name={{name}}&part_no={{no}}&${sharedQuery}`;
 
-const inquireHref = `${inquireHrefTemplate}${encodeURIComponent(selectedPartNo)}`;
-const orderHref = `${orderHrefTemplate}${encodeURIComponent(selectedPartNo)}`;
+const inquireHref = inquireHrefTemplate
+  .replace('{{name}}', encodeURIComponent(productTitle))
+  .replace('{{no}}', encodeURIComponent(selectedPartNo));
+const orderHref = orderHrefTemplate
+  .replace('{{name}}', encodeURIComponent(productTitle))
+  .replace('{{no}}', encodeURIComponent(selectedPartNo));
 
 // eBay descriptions are legacy HTML needing normalisation; Direct ones are
 // plain text written in the CMS.
@@ -223,6 +233,7 @@ const descriptionHtml = product.descriptionIsHtml
                     type="button"
                     class:list={['variant-pill', { active: index === 0 }]}
                     data-variant-sku={variant.sku}
+                    data-variant-option={variant.optionName}
                     data-variant-price={variant.priceLabel ?? ''}
                     data-variant-image={variant.image ?? ''}
                     aria-pressed={index === 0 ? 'true' : 'false'}
@@ -246,12 +257,14 @@ const descriptionHtml = product.descriptionIsHtml
             class="btn btn-lg"
             id="inquireBtn"
             data-href-template={inquireHrefTemplate}
+            data-product-title={product.title}
             href={inquireHref}>Inquire About This Part</a
           >
           <a
             class="btn btn-lg btn-outline"
             id="orderBtn"
             data-href-template={orderHrefTemplate}
+            data-product-title={product.title}
             href={orderHref}>Order Direct</a
           >
         </div>
@@ -704,8 +717,9 @@ const descriptionHtml = product.descriptionIsHtml
 
   // --- Variant selector -------------------------------------------------------
   // The first option is already selected in the server-rendered markup, so this
-  // only has to react to clicks: swap the price, the SKU, the `part_no` on both
-  // action links, and the main photo when the option ships its own image.
+  // only has to react to clicks: swap the price, the SKU, the `part_name` /
+  // `part_no` on both action links, and the main photo when the option ships its
+  // own image.
   const priceEl = document.getElementById('detailPrice');
   const skuEl = document.getElementById('detailSku');
   const pills = Array.from(document.querySelectorAll<HTMLButtonElement>('.variant-pill'));
@@ -717,15 +731,25 @@ const descriptionHtml = product.descriptionIsHtml
   for (const pill of pills) {
     pill.addEventListener('click', () => {
       const sku = pill.dataset.variantSku ?? '';
+      const optionName = pill.dataset.variantOption ?? '';
       const price = pill.dataset.variantPrice;
       const variantImage = pill.dataset.variantImage ?? '';
 
       if (priceEl && price) priceEl.textContent = price;
       if (skuEl && sku) skuEl.textContent = sku;
 
+      // Deep-link the inquiry form with the exact selection: swap `part_no` for the
+      // variant's SKU and append the option name to `part_name`
+      // (e.g. "Rims 22 Inch Chrome - Rims 22 Inch Red") so the shop knows which
+      // variant the customer clicked.
       for (const link of hrefTargets) {
         const template = link.dataset.hrefTemplate;
-        if (template) link.href = template + encodeURIComponent(sku);
+        if (!template) continue;
+        const baseTitle = link.dataset.productTitle ?? '';
+        const fullTitle = optionName ? `${baseTitle} - ${optionName}` : baseTitle;
+        link.href = template
+          .replace('{{name}}', encodeURIComponent(fullTitle))
+          .replace('{{no}}', encodeURIComponent(sku));
       }
 
       // Show the option's own photo, or fall back to the product's primary one
