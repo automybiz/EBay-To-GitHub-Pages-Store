@@ -15,11 +15,13 @@ backend:
   name: github
   repo: automybiz/Ebay-To-GitHub-Pages-Store
   branch: main
-
-# GitHub OAuth needs a small auth worker when the site is not hosted on Netlify.
-# Deploy https://github.com/sveltia/sveltia-cms-auth to Cloudflare Workers, then
-# uncomment this and point it at your worker:
-#   base_url: https://sveltia-cms-auth.<your-subdomain>.workers.dev
+  # GitHub OAuth needs a small auth worker when the site is not hosted on Netlify.
+  # This site is on a custom domain, so api.netlify.com rejects it with a
+  # "Not Found" error. We self-host Sveltia CMS Authenticator on Cloudflare
+  # Workers (https://github.com/sveltia/sveltia-cms-auth) and point the CMS at
+  # it. The worker must allow this site's domain via its ALLOWED_DOMAINS var.
+  base_url: https://epw-sveltia-cms.europartswest.workers.dev
+  auth_endpoint: auth
 
 # NOTE: there is deliberately no `local_backend` key here. Sveltia dropped the
 # Decap/Netlify-CMS proxy-server workflow and ignores that option. To edit
