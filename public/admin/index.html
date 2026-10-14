@@ -6,6 +6,22 @@
     <!-- Never index the admin UI. -->
     <meta name="robots" content="noindex" />
     <title>EuroPartsWest — Content Manager</title>
+    <!-- Injects Floating Guide Button that survives Sveltia's mount -->
+    <script>
+      window.addEventListener('load', () => {
+        setInterval(() => {
+          if (!document.getElementById('epw-guide-btn')) {
+            const btn = document.createElement('a');
+            btn.id = 'epw-guide-btn';
+            btn.href = '/admin/guide.html';
+            btn.target = '_blank';
+            btn.innerHTML = '📖 System Guide &amp; Docs ↗';
+            btn.style.cssText = 'position:fixed;bottom:25px;right:25px;z-index:999999;background:#c8102e;color:#fff;padding:12px 22px;border-radius:30px;font-family:sans-serif;font-weight:bold;font-size:13px;text-decoration:none;box-shadow:0 4px 20px rgba(0,0,0,0.8);display:flex;align-items:center;gap:8px;';
+            document.body.appendChild(btn);
+          }
+        }, 1000);
+      });
+    </script>
   </head>
   <body>
     <!--
