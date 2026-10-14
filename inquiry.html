@@ -414,6 +414,14 @@
         font-size: 0.88rem;
     }
 
+    /* Anti-scrape email image: address is shown as a PNG instead of text. */
+    .inquiry-form-container .terms-group label .email-png-inline {
+        display: inline-block;
+        width: 180px;
+        height: auto;
+        vertical-align: -4px;
+    }
+
     .inquiry-form-container .submit-btn {
         width: 100%;
         padding: 16px;
@@ -606,7 +614,7 @@
         <!-- Terms -->
         <div class="terms-group">
             <input type="checkbox" id="terms" name="terms_and_conditions" required>
-            <label for="terms">This inquiry goes only to a Euro Parts West sales associate: sales@europartswest.com <br><br>
+            <label for="terms">This inquiry goes only to a Euro Parts West sales associate: <img src="assets/images/png_emails/sales@europartswest.com.png" alt="Email sales" class="email-png-inline"> <br><br>
                 Confidentiality matters to us — we won’t share, sell, or use your contact info for marketing. <br><br> 
                 I agree to the terms and conditions and consent to be contacted regarding my inquiry to Euro Parts West.</label>
         </div>

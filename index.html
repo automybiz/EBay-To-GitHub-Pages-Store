@@ -310,6 +310,15 @@
       color: #e0e0e0;
     }
 
+    /* Anti-scrape email images: address is shown as a PNG and the link
+       forwards visitors to the inquiry form instead of a mailto: URL. */
+    .contact-card .email-png {
+      display: inline-block;
+      width: 210px;
+      height: auto;
+      vertical-align: middle;
+    }
+
     /* Middle Section: Inquiry Box */
     .inquiry-block {
       text-align: center;
@@ -509,7 +518,9 @@
         <div class="contact-card">
           <div class="card-title">+1 (844) URO-PART</div>
           <div>
-            <a href="mailto:sales@europartswest.com">sales@europartswest.com</a>
+            <a href="inquiry.html">
+              <img src="assets/images/png_emails/sales@europartswest.com.png" alt="Email sales" class="email-png">
+            </a>
           </div>
         </div>
 
@@ -519,7 +530,9 @@
           <div class="card-subtitle">Parts Specialist / Motorsport Design Engineer</div>
           <div class="card-subtitle">PORSCHE &amp; Motorsport Specialist North America</div>
           <div>
-            <a href="mailto:day@europartswest.com">day@europartswest.com</a>
+            <a href="inquiry.html">
+              <img src="assets/images/png_emails/day@europartswest.com.png" alt="Email day" class="email-png">
+            </a>
           </div>
         </div>
       </div>

@@ -16,7 +16,11 @@ What it does
      - brand + manufacturer part number
      - the item description
      - condition and estimated availability
-4. Writes a single clean dataset to:  src/data/ebay-products.json
+4. Sanitises every description (strips Google-Sheets origin wrappers, inline
+   styles/classes and eBay/Sheets tracking attributes) so the JSON stays tiny.
+5. Writes the same clean dataset to BOTH:
+     - src/data/ebay-products.json    (imported by the Astro build)
+     - public/data/ebay-products.json (served at /data/ebay-products.json)
 
 Only the Python standard library is required (no pip installs). Credentials are
 read from a local .env file (see .env.example) or the process environment.
@@ -35,7 +39,14 @@ import urllib.request
 # Configuration
 # ---------------------------------------------------------------------------
 EBAY_STORE_URL = "https://www.ebay.com/str/europartswestllc"
-OUTPUT_PATH = os.path.join("src", "data", "ebay-products.json")
+
+# The same dataset is written to two places: the file the Astro build imports,
+# and a copy under public/ so it is also served as a plain relative file at
+# /data/ebay-products.json on *any* domain (GitHub Pages, GoDaddy, Cloudflare).
+OUTPUT_PATHS = [
+    os.path.join("src", "data", "ebay-products.json"),
+    os.path.join("public", "data", "ebay-products.json"),
+]
 
 # eBay's largest standard (non-zoom) image rendition.
 HIGH_RES_SIZE = "s-l1600"
@@ -45,6 +56,78 @@ REQUEST_DELAY = 0.15
 
 # Matches an eBay image size token, e.g. "s-l225.jpg" or "s-l500.webp".
 _SIZE_RE = re.compile(r"s-l\d+(\.(?:jpg|jpeg|png|webp|gif))", re.IGNORECASE)
+
+
+# ---------------------------------------------------------------------------
+# Description HTML cleaning
+# ---------------------------------------------------------------------------
+# Google Sheets wraps exported markup in a custom origin element we don't need.
+_GSHEETS_ORIGIN_RE = re.compile(r"</?google-sheets-html-origin[^>]*>", re.IGNORECASE)
+
+# Whole elements that carry no catalogue content (analytics, share widgets and
+# inline styling). The element *and its body* are removed.
+_DROP_ELEMENT_RE = re.compile(
+    r"<(script|style|svg)\b[^>]*>.*?</\1\s*>", re.IGNORECASE | re.DOTALL
+)
+
+# Safety net for any <script>/<style>/<svg> left without a closing tag, so an
+# injected description can never ship executable markup.
+_STRAY_TAG_RE = re.compile(r"</?(?:script|style|svg)\b[^>]*>", re.IGNORECASE)
+
+# One start/end tag at a time, so attributes can be filtered per tag.
+_TAG_RE = re.compile(
+    r"""<\s*(/?)\s*([a-zA-Z][\w:-]*)((?:[^>"']|"[^"]*"|'[^']*')*)>"""
+)
+
+# One attribute (with an optional value) inside a tag.
+_ATTR_RE = re.compile(
+    r"""\s+([a-zA-Z_:][-\w:.]*)(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+))?"""
+)
+
+# The only attributes worth keeping: table structure, media and links. Every
+# other attribute on an eBay description is inline presentation (style, class,
+# <font face/color/size>, bgcolor) or tracking junk (data-*, aria-*, ng-*,
+# data-sheets-* and eBay's opaque analytics attributes) that merely bloats the
+# file. colspan/rowspan and hyperlink/media src are preserved.
+_KEEP_ATTRS = frozenset({
+    "colspan", "rowspan", "scope",                # table structure
+    "src", "srcset", "alt", "width", "height",    # media
+    "href", "target", "rel", "title",             # links / tooltips
+})
+
+
+def _keep_attr(match):
+    """Return an attribute only when its (lowercased) name is allow-listed."""
+    return match.group(0) if match.group(1).lower() in _KEEP_ATTRS else ""
+
+
+def clean_description(html):
+    """Strip heavy, non-content markup from a raw eBay description.
+
+    The legacy descriptions arrive as Google-Sheets / eBay widget HTML littered
+    with inline ``style``/``class``/``data-sheets-*`` attributes, ``ng-*`` and
+    ``aria-*`` hooks, multi-hundred-byte tracking attributes, presentational
+    ``<font face color size>`` tags and whole ``<script>``/``<style>``/``<svg>``
+    widgets. None of it affects the catalogue, yet it accounted for ~90% of the
+    JSON, so *structure* is kept (every tag, plus ``colspan``/``rowspan``, media
+    ``src``/``alt`` and hyperlink ``href``) and everything else is dropped.
+
+    Plain-text descriptions pass through untouched.
+    """
+    if not html:
+        return html
+
+    html = _GSHEETS_ORIGIN_RE.sub("", html)
+    html = _DROP_ELEMENT_RE.sub("", html)
+    html = _STRAY_TAG_RE.sub("", html)
+
+    def rebuild(match):
+        closing, name, attrs = match.group(1), match.group(2), match.group(3)
+        if closing:
+            return f"</{name}>"
+        return f"<{name}{_ATTR_RE.sub(_keep_attr, attrs)}>"
+
+    return _TAG_RE.sub(rebuild, html)
 
 
 def load_dotenv():
@@ -284,7 +367,7 @@ def build_product(summary, detail):
         "brand": brand,
         "mpn": mpn,
         "specifics": specifics,
-        "description": merged.get("description"),
+        "description": clean_description(merged.get("description")),
         "estimated_quantity": estimated_quantity(merged),
         "category": merged.get("categoryPath") or merged.get("categoryId"),
     }
@@ -350,11 +433,20 @@ def mock_products():
 
 
 def write_output(products):
-    """Write the dataset to src/data/ebay-products.json (creating folders)."""
-    os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
-    with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
-        json.dump(products, f, indent=4, ensure_ascii=False)
-    print(f"Wrote {len(products)} products to {OUTPUT_PATH}")
+    """Write the dataset to every configured output path (creating folders).
+
+    The payload is serialised once (``indent=2`` keeps the file compact while
+    staying human-diffable) and written verbatim to each target, so the Astro
+    import and the publicly served copy can never drift apart.
+    """
+    payload = json.dumps(products, indent=2, ensure_ascii=False)
+    for path in OUTPUT_PATHS:
+        directory = os.path.dirname(path)
+        if directory:
+            os.makedirs(directory, exist_ok=True)
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(payload)
+        print(f"Wrote {len(products)} products to {path}")
 
 
 def sync():
