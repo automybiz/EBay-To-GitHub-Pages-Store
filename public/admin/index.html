@@ -6,10 +6,18 @@
     <!-- Never index the admin UI. -->
     <meta name="robots" content="noindex" />
     <title>EuroPartsWest — Content Manager</title>
-    <!-- Injects Floating Guide Button that survives Sveltia's mount -->
+
+  </head>
+  <body>
+    <!--
+      Sveltia CMS — a drop-in, Decap/Netlify-CMS compatible editor.
+      Loaded from the CDN as an ES module; all configuration lives in the
+      sibling config.yml file.
+    -->
+    <!-- Injects single Floating Guide Button -->
     <script>
       window.addEventListener('load', () => {
-        setInterval(() => {
+        setTimeout(() => {
           if (!document.getElementById('epw-guide-btn')) {
             const btn = document.createElement('a');
             btn.id = 'epw-guide-btn';
@@ -19,20 +27,9 @@
             btn.style.cssText = 'position:fixed;bottom:25px;right:25px;z-index:999999;background:#c8102e;color:#fff;padding:12px 22px;border-radius:30px;font-family:sans-serif;font-weight:bold;font-size:13px;text-decoration:none;box-shadow:0 4px 20px rgba(0,0,0,0.8);display:flex;align-items:center;gap:8px;';
             document.body.appendChild(btn);
           }
-        }, 1000);
+        }, 800);
       });
     </script>
-  </head>
-  <body>
-    <!--
-      Sveltia CMS — a drop-in, Decap/Netlify-CMS compatible editor.
-      Loaded from the CDN as an ES module; all configuration lives in the
-      sibling config.yml file.
-    -->
-    <!-- Floating System Guide Button for Day -->
-    <a href="/admin/guide.html" target="_blank" style="position: fixed; bottom: 20px; right: 20px; z-index: 99999; background: #c8102e; color: #ffffff; padding: 10px 18px; border-radius: 30px; font-family: sans-serif; font-weight: bold; font-size: 13px; text-decoration: none; box-shadow: 0 4px 15px rgba(0,0,0,0.6); display: flex; align-items: center; gap: 8px;">
-      📖 System Guide &amp; Instructions
-    </a>
     <script src="https://unpkg.com/@sveltia/cms/dist/sveltia-cms.js" type="module"></script>
   </body>
 </html>
