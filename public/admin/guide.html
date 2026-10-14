@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Euro Parts West - System Guide & Workflow</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #121212;
+      --card-bg: #1c1c1c;
+      --card-hover: #242424;
+      --border: #2e2e2e;
+      --red: #c8102e;
+      --cyan: #00e5ff;
+      --green: #27ae60;
+      --text: #f0f0f0;
+      --text-muted: #9e9e9e;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background-color: var(--bg);
+      background-image: 
+        radial-gradient(rgba(0, 0, 0, 0.75) 15%, transparent 16%),
+        radial-gradient(rgba(0, 0, 0, 0.75) 15%, transparent 16%);
+      background-size: 16px 16px;
+      color: var(--text);
+      line-height: 1.6;
+      padding: 40px 20px 80px;
+    }
+
+    .container {
+      max-width: 920px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    .header {
+      margin-bottom: 30px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 25px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    .header-text h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .header-text h1 span {
+      color: var(--red);
+    }
+
+    .header-text p {
+      color: var(--text-muted);
+      margin-top: 5px;
+      font-size: 0.95rem;
+    }
+
+    .btn-back {
+      background: var(--red);
+      color: #fff;
+      text-decoration: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: opacity 0.2s;
+    }
+
+    .btn-back:hover {
+      opacity: 0.9;
+    }
+
+    /* Architecture Visual Banner */
+    .arch-flow {
+      background: rgba(0, 229, 255, 0.05);
+      border: 1px solid rgba(0, 229, 255, 0.25);
+      border-radius: 8px;
+      padding: 18px 22px;
+      margin-bottom: 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-size: 0.9rem;
+    }
+
+    .arch-node {
+      font-weight: 600;
+      color: var(--cyan);
+    }
+
+    .arch-arrow {
+      color: var(--text-muted);
+      font-weight: bold;
+    }
+
+    /* Accordion Styles */
+    .accordion-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .accordion-item {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+
+    .accordion-item:hover {
+      border-color: #444;
+    }
+
+    .accordion-header {
+      width: 100%;
+      background: none;
+      border: none;
+      color: #fff;
+      padding: 18px 22px;
+      font-size: 1.05rem;
+      font-weight: 600;
+      font-family: inherit;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      user-select: none;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .badge {
+      font-size: 0.75rem;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge-ebay {
+      background: rgba(200, 16, 46, 0.15);
+      color: #ff4d6d;
+      border: 1px solid rgba(200, 16, 46, 0.3);
+    }
+
+    .badge-cms {
+      background: rgba(39, 174, 96, 0.15);
+      color: #2ecc71;
+      border: 1px solid rgba(39, 174, 96, 0.3);
+    }
+
+    .badge-store {
+      background: rgba(0, 229, 255, 0.15);
+      color: var(--cyan);
+      border: 1px solid rgba(0, 229, 255, 0.3);
+    }
+
+    .chevron {
+      width: 20px;
+      height: 20px;
+      transition: transform 0.25s ease;
+      color: var(--text-muted);
+    }
+
+    .accordion-item.active .chevron {
+      transform: rotate(180deg);
+      color: var(--cyan);
+    }
+
+    .accordion-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.35s ease-out;
+      background: rgba(0, 0, 0, 0.25);
+      border-top: 1px solid transparent;
+    }
+
+    .accordion-item.active .accordion-content {
+      border-top-color: var(--border);
+    }
+
+    .content-inner {
+      padding: 24px;
+      font-size: 0.95rem;
+      color: #d6d6d6;
+    }
+
+    .content-inner p {
+      margin-bottom: 14px;
+    }
+
+    .content-inner ul, .content-inner ol {
+      margin-left: 22px;
+      margin-bottom: 14px;
+    }
+
+    .content-inner li {
+      margin-bottom: 8px;
+    }
+
+    .content-inner strong {
+      color: #fff;
+    }
+
+    .code-pill {
+      background: #2b2b2b;
+      color: #00e5ff;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 0.85rem;
+    }
+
+    .callout {
+      background: rgba(200, 16, 46, 0.08);
+      border-left: 3px solid var(--red);
+      padding: 14px 18px;
+      border-radius: 0 6px 6px 0;
+      margin: 16px 0;
+      font-size: 0.9rem;
+    }
+
+    .step-box {
+      background: #232323;
+      border-left: 3px solid var(--green);
+      padding: 12px 16px;
+      margin-bottom: 10px;
+      border-radius: 0 4px 4px 0;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- Top Navigation Header -->
+  <div class="header">
+    <div class="header-text">
+      <h1>EuroPartsWest <span>// System Architecture Guide</span></h1>
+      <p>Operational instructions for managing the catalog, eBay sync, and custom variant inventory.</p>
+    </div>
+    <a href="/admin/" class="btn-back">&larr; Return to Admin Dashboard</a>
+  </div>
+
+  <!-- Visual Architecture Banner -->
+  <div class="arch-flow">
+    <div><span class="arch-node">eBay Live Store</span> (Automated Sync)</div>
+    <span class="arch-arrow">+</span>
+    <div><span class="arch-node">Sveltia CMS</span> (Direct Inventory)</div>
+    <span class="arch-arrow">&rarr;</span>
+    <div><span class="arch-node">Astro Engine</span> (Static Generator)</div>
+    <span class="arch-arrow">&rarr;</span>
+    <div><span class="arch-node">europartswest.com/store/</span></div>
+  </div>
+
+  <!-- Interactive Accordions -->
+  <div class="accordion-list">
+
+    <!-- Section 1 -->
+    <div class="accordion-item">
+      <button class="accordion-header" onclick="toggleAccordion(this)">
+        <div class="header-left">
+          <span class="badge badge-store">Overview</span>
+          <span>1. How the Two-Channel Inventory System Works</span>
+        </div>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      </button>
+      <div class="accordion-content">
+        <div class="content-inner">
+          <p>Euro Parts West runs on a <strong>dual-channel inventory engine</strong> designed to give Day the flexibility to sell everywhere while keeping direct profits on his own site:</p>
+          <ol>
+            <li><strong>Channel 1 (eBay Synced Catalog):</strong> Automatically mirrors parts listed on the official eBay store. Upscales thumbnails to full 1600px resolution, extracts OEM technical specifications, and strips external links so customers stay on the site.</li>
+            <li><strong>Channel 2 (Direct Sveltia Inventory):</strong> Day’s private dashboard at <span class="code-pill">/admin/</span> where he can create custom packages, add multiple variants (finishes, sizes, voltages), set direct pricing, and bypass eBay’s 10%–13% seller fees.</li>
+          </ol>
+          <p>Both streams automatically merge together into the live store catalog at <span class="code-pill">europartswest.com/store/</span>.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 2 -->
+    <div class="accordion-item">
+      <button class="accordion-header" onclick="toggleAccordion(this)">
+        <div class="header-left">
+          <span class="badge badge-cms">Sveltia CMS</span>
+          <span>2. How to Add Custom Products &amp; Variants in /admin</span>
+        </div>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      </button>
+      <div class="accordion-content">
+        <div class="content-inner">
+          <p>Follow these steps to create a custom product with variations:</p>
+          
+          <div class="step-box">
+            <strong>Step 1: Open the Admin</strong><br>
+            Navigate to <span class="code-pill">europartswest.com/admin/</span> and log in using the blue <strong>Sign In with GitHub</strong> button.
+          </div>
+
+          <div class="step-box">
+            <strong>Step 2: Basic Details</strong><br>
+            Click <strong>Create New Entry</strong>. Fill in the <strong>Title</strong>, <strong>SKU</strong>, <strong>Base Price</strong>, and <strong>Description</strong>.
+          </div>
+
+          <div class="step-box">
+            <strong>Step 3: Primary Product Image</strong><br>
+            Drag and drop your hero photo into the <strong>Primary Product Image</strong> box. This is the photo that shows on the main store catalog grid.
+          </div>
+
+          <div class="step-box">
+            <strong>Step 4: Adding Variants (Sizes, Finishes, Options)</strong><br>
+            Click <strong>+ Add Variant</strong> at the bottom.
+            <ul>
+              <li><strong>Variant Option Name:</strong> e.g., <em>Rims 22 Inch Red</em> or <em>14V / 75 AMP</em></li>
+              <li><strong>SKU:</strong> The specific inventory number for this variant</li>
+              <li><strong>Price &amp; Stock:</strong> Independent price and quantity for this option</li>
+              <li><strong>Variant Image:</strong> Drop the option-specific photo here. When a buyer clicks this variant pill on the website, the hero photo dynamically swaps to this image!</li>
+            </ul>
+          </div>
+
+          <div class="step-box">
+            <strong>Step 5: Publish</strong><br>
+            Click <strong>Save</strong> in the top right. GitHub automatically triggers a build in the background, publishing the new product live to the website in approximately 45–60 seconds!
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 3 -->
+    <div class="accordion-item">
+      <button class="accordion-header" onclick="toggleAccordion(this)">
+        <div class="header-left">
+          <span class="badge badge-ebay">Automation</span>
+          <span>3. How the Automated eBay Sync Works</span>
+        </div>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      </button>
+      <div class="accordion-content">
+        <div class="content-inner">
+          <p>The automated script <span class="code-pill">ebay_sync.py</span> handles syncing with eBay:</p>
+          <ul>
+            <li><strong>Official API:</strong> Authenticates with eBay's developer API using secure credentials.</li>
+            <li><strong>Ultra-High Resolution:</strong> Upscales low-res thumbnails to 1600px <span class="code-pill">s-l1600.jpg</span> photos and collects full multi-image galleries (up to 15 photos per part).</li>
+            <li><strong>OEM Specs Extraction:</strong> Extracts manufacturer part numbers (MPN), interchange numbers, voltages, and fitment notes directly into structured technical spec tables.</li>
+            <li><strong>Safe Storage:</strong> Outputs to <span class="code-pill">src/data/ebay-products.json</span>. It never touches or overwrites your custom CMS parts!</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 4 -->
+    <div class="accordion-item">
+      <button class="accordion-header" onclick="toggleAccordion(this)">
+        <div class="header-left">
+          <span class="badge badge-store">Customer Flow</span>
+          <span>4. How Inquiries &amp; Orders Flow into GoHighLevel</span>
+        </div>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      </button>
+      <div class="accordion-content">
+        <div class="content-inner">
+          <p>To retain buyers and eliminate the 13% eBay commission, all buttons route internally:</p>
+          <ul>
+            <li>When a buyer clicks <strong>Inquire About This Part</strong> or <strong>Order Direct</strong>, they are taken directly to <span class="code-pill">europartswest.com/inquiry.html</span>.</li>
+            <li><strong>Automatic Pre-Fill:</strong> The exact part title and chosen variant SKU are pre-filled in the inquiry form automatically through URL parameters.</li>
+            <li><strong>CRM Integration:</strong> When submitted, the inquiry fires directly into <strong>GoHighLevel</strong> via webhook, alerting Day immediately via SMS/Email with zero manual entry required.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  function toggleAccordion(button) {
+    const item = button.parentElement;
+    const content = item.querySelector('.accordion-content');
+    const isActive = item.classList.contains('active');
+
+    // Close other items
+    document.querySelectorAll('.accordion-item').forEach(otherItem => {
+      otherItem.classList.remove('active');
+      otherItem.querySelector('.accordion-content').style.maxHeight = null;
+    });
+
+    // Toggle clicked item
+    if (!isActive) {
+      item.classList.add('active');
+      content.style.maxHeight = content.scrollHeight + "px";
+    }
+  }
+
+  // Open first item by default on load
+  document.addEventListener('DOMContentLoaded', () => {
+    const firstHeader = document.querySelector('.accordion-header');
+    if (firstHeader) toggleAccordion(firstHeader);
+  });
+</script>
+
+</body>
+</html>
