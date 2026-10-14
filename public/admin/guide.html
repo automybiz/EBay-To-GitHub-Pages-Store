@@ -5,25 +5,83 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <!-- Internal Admin Guide: Prevent search engines from indexing -->
   <meta name="robots" content="noindex, nofollow" />
+  <!-- Dark Reader Extension Lock -->
+  <meta name="darkreader-lock" />
   <title>Euro Parts West - System Guide & Workflow</title>
+  <link rel="icon" type="image/x-icon" href="../favicon.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <style>
+  <script>
+    /* ==========================================================================
+       Universal Dark Reader Kill Switch
+       Strips Dark Reader stylesheets so your Google Sheet theme colors
+       and neon animated borders render 100% natively without color inversion.
+       ========================================================================== */
+    (function() {
+      function disarmDarkReader() {
+        const drStyles = document.querySelectorAll('style.darkreader, style[class*="darkreader"]');
+        drStyles.forEach(el => el.remove());
+      }
+      disarmDarkReader();
+      const observer = new MutationObserver(mutations => {
+        for (const m of mutations) {
+          for (const node of m.addedNodes) {
+            if (node.nodeType === 1 && (node.classList?.contains('darkreader') || (node.tagName === 'STYLE' && node.className.includes('darkreader')))) {
+              node.remove();
+            }
+          }
+        }
+      });
+      observer.observe(document.documentElement, { childList: true, subtree: true });
+      window.addEventListener('DOMContentLoaded', disarmDarkReader);
+      window.addEventListener('load', disarmDarkReader);
+    })();
+  </script>
+
+  <!-- Instant Head Pre-Hydration to prevent FOUC (Flash of Unstyled Content) -->
+  <script>
+    (function() {
+      try {
+        var cachedThemeCss = localStorage.getItem('epw_live_theme_css');
+        if (cachedThemeCss) {
+          var styleEl = document.createElement('style');
+          styleEl.id = 'epwDynamicThemeStyles';
+          styleEl.textContent = cachedThemeCss;
+          document.head.appendChild(styleEl);
+        }
+      } catch (e) {}
+    })();
+  </script>
+
+  <style id="epwThemeStylesFallback">
     :root {
-      --bg: #121212;
+      /* Base Theme Tokens */
+      --page-bg: #121212;
       --card-bg: #1c1c1c;
-      --card-hover: #242424;
-      --border: #2e2e2e;
-      --red: #c8102e;
-      --red-hover: #e01235;
-      --cyan: #00e5ff;
-      --green: #27ae60;
-      --green-glow: rgba(39, 174, 96, 0.2);
-      --text: #f0f0f0;
+      --card-border-color-1: #0FF;
+      --card-border-color-2: #3BF;
+      --card-border-speed: 5s;
+      --border-color: #2e2e2e;
+      --primary-accent: #c8102e;
+      --primary-hover: #e01235;
+      --highlight-color: #00e5ff;
+      --title-color: #FA0;
+      --text-primary: #f0f0f0;
       --text-muted: #9e9e9e;
-      --code-bg: #272727;
+      
+      --input-bg: #202020;
+      --input-border: #333333;
+      --input-focus: #FA0;
+
+      --green-accent: #27ae60;
+      --green-glow: rgba(39, 174, 96, 0.25);
+
+      --special-effects-color-1: #064;
+      --special-effects-color-2: #0FF;
+      --special-effects-color-3: #3BF;
+      --special-effects-color-4: #A85;
     }
 
     * {
@@ -34,14 +92,15 @@
 
     body {
       font-family: 'Inter', -apple-system, sans-serif;
-      background-color: var(--bg);
+      background-color: var(--page-bg);
       background-image: 
         radial-gradient(rgba(0, 0, 0, 0.75) 15%, transparent 16%),
         radial-gradient(rgba(0, 0, 0, 0.75) 15%, transparent 16%);
       background-size: 16px 16px;
-      color: var(--text);
+      color: var(--text-primary);
       line-height: 1.6;
       padding: 40px 20px 80px;
+      transition: background-color 0.25s ease, color 0.25s ease;
     }
 
     .container {
@@ -52,7 +111,7 @@
     /* Header */
     .header {
       margin-bottom: 30px;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid var(--border-color);
       padding-bottom: 25px;
       display: flex;
       justify-content: space-between;
@@ -64,11 +123,11 @@
     .header-text h1 {
       font-size: 1.85rem;
       font-weight: 800;
-      color: #fff;
+      color: var(--text-primary);
     }
 
     .header-text h1 span {
-      color: var(--red);
+      color: var(--primary-accent);
     }
 
     .header-text p {
@@ -78,8 +137,8 @@
     }
 
     .btn-back {
-      background: var(--red);
-      color: #fff;
+      background: var(--primary-accent);
+      color: #fff !important;
       text-decoration: none;
       padding: 10px 20px;
       border-radius: 6px;
@@ -89,14 +148,14 @@
     }
 
     .btn-back:hover {
-      background: var(--red-hover);
+      background: var(--primary-hover);
       transform: translateY(-1px);
     }
 
     /* Architecture Visual Banner */
     .arch-flow {
-      background: rgba(0, 229, 255, 0.05);
-      border: 1px solid rgba(0, 229, 255, 0.25);
+      background: rgba(0, 229, 255, 0.04);
+      border: 1px solid var(--border-color);
       border-radius: 8px;
       padding: 18px 22px;
       margin-bottom: 30px;
@@ -110,7 +169,7 @@
 
     .arch-node {
       font-weight: 700;
-      color: var(--cyan);
+      color: var(--highlight-color);
     }
 
     .arch-arrow {
@@ -120,17 +179,41 @@
 
     /* Links in content */
     a.doc-link {
-      color: var(--cyan);
+      color: var(--highlight-color);
       text-decoration: underline;
       font-weight: 600;
-      transition: color 0.2s;
+      transition: opacity 0.2s;
     }
 
     a.doc-link:hover {
-      color: #7df2ff;
+      opacity: 0.85;
     }
 
-    /* Accordion Styles */
+    /* ==========================================================================
+       Decoupled Dual-Engine Border Animation Architecture (@property Isolated)
+       ========================================================================== */
+    @property --border-angle {
+      syntax: "<angle>";
+      inherits: false;
+      initial-value: 0deg;
+    }
+
+    @keyframes rotateBorderBeam {
+      to {
+        --border-angle: 360deg;
+      }
+    }
+
+    @keyframes flowBeamRail {
+      0% {
+        background-position: 0% 50%;
+      }
+      100% {
+        background-position: 300% 50%;
+      }
+    }
+
+    /* Base Accordion Item (Closed state: subtle border, no animation) */
     .accordion-list {
       display: flex;
       flex-direction: column;
@@ -139,29 +222,152 @@
 
     .accordion-item {
       background: var(--card-bg);
-      border: 1px solid var(--border);
+      border: 1.5px solid var(--border-color);
       border-radius: 8px;
       overflow: hidden;
       transition: border-color 0.2s, box-shadow 0.2s;
     }
 
     .accordion-item:hover {
-      border-color: #444;
+      border-color: var(--highlight-color);
     }
 
-    .accordion-item.active {
-      border-color: #555;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    /* OPEN ACCORDION: Applies special border effect when .active */
+    .card-border-animated .accordion-item.active {
+      border: 1.5px solid transparent !important;
+      animation: rotateBorderBeam var(--card-border-speed, 5s) linear infinite !important;
+      box-shadow: 0 4px 25px rgba(0,0,0,0.5);
     }
 
+    .card-border-animated .accordion-item.active .accordion-header {
+      border-bottom: none !important;
+      position: relative;
+    }
+
+    .card-border-animated .accordion-item.active .accordion-header::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 1.5px;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    /* Effect A: Laser Comet */
+    .card-border-animated.effect-laser-comet .accordion-item.active {
+      background: 
+        linear-gradient(var(--card-bg), var(--card-bg)) padding-box,
+        conic-gradient(
+          from var(--border-angle),
+          transparent 0%,
+          transparent 60%,
+          var(--card-border-color-1) 85%,
+          var(--card-border-color-2) 95%,
+          transparent 100%
+        ) border-box !important;
+    }
+
+    .card-border-animated.effect-laser-comet .accordion-item.active .accordion-header::after {
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        var(--card-border-color-1) 25%,
+        var(--card-border-color-2) 45%,
+        transparent 65%,
+        transparent 100%
+      );
+      background-size: 300% 100%;
+      animation: flowBeamRail var(--card-border-speed, 5s) linear infinite !important;
+    }
+
+    /* Effect B: Dual-Tone Blend */
+    .card-border-animated.effect-dual-tone-blend .accordion-item.active {
+      background: 
+        linear-gradient(var(--card-bg), var(--card-bg)) padding-box,
+        conic-gradient(
+          from var(--border-angle),
+          var(--card-border-color-1) 0%,
+          var(--card-border-color-2) 50%,
+          var(--card-border-color-1) 100%
+        ) border-box !important;
+    }
+
+    .card-border-animated.effect-dual-tone-blend .accordion-item.active .accordion-header::after {
+      background: linear-gradient(
+        90deg,
+        var(--card-border-color-1) 0%,
+        var(--card-border-color-2) 50%,
+        var(--card-border-color-1) 100%
+      );
+      background-size: 300% 100%;
+      animation: flowBeamRail var(--card-border-speed, 5s) linear infinite !important;
+    }
+
+    /* Effect C: Hue Sweep */
+    .card-border-animated.effect-hue-sweep .accordion-item.active {
+      background: 
+        linear-gradient(var(--card-bg), var(--card-bg)) padding-box,
+        conic-gradient(
+          in hsl longer hue from var(--border-angle),
+          var(--card-border-color-1) 0%,
+          var(--card-border-color-2) 50%,
+          var(--card-border-color-1) 100%
+        ) border-box !important;
+    }
+
+    .card-border-animated.effect-hue-sweep .accordion-item.active .accordion-header::after {
+      background: linear-gradient(
+        90deg,
+        var(--card-border-color-1) 0%,
+        #38BDF8 25%,
+        var(--card-border-color-2) 50%,
+        #A855F7 75%,
+        var(--card-border-color-1) 100%
+      );
+      background-size: 300% 100%;
+      animation: flowBeamRail var(--card-border-speed, 5s) linear infinite !important;
+    }
+
+    /* Effect D: FX Spectrum */
+    .card-border-animated.effect-fx-rainbow .accordion-item.active {
+      background: 
+        linear-gradient(var(--card-bg), var(--card-bg)) padding-box,
+        conic-gradient(
+          from var(--border-angle),
+          var(--special-effects-color-1) 0%,
+          var(--special-effects-color-2) 25%,
+          var(--special-effects-color-3) 50%,
+          var(--special-effects-color-4) 75%,
+          var(--special-effects-color-1) 100%
+        ) border-box !important;
+    }
+
+    .card-border-animated.effect-fx-rainbow .accordion-item.active .accordion-header::after {
+      background: linear-gradient(
+        90deg,
+        var(--special-effects-color-1) 0%,
+        var(--special-effects-color-2) 25%,
+        var(--special-effects-color-3) 50%,
+        var(--special-effects-color-4) 75%,
+        var(--special-effects-color-1) 100%
+      );
+      background-size: 300% 100%;
+      animation: flowBeamRail var(--card-border-speed, 5s) linear infinite !important;
+    }
+
+    /* ==========================================================================
+       Accordion Typography & Internal Controls
+       ========================================================================== */
     .accordion-header {
       width: 100%;
       background: none;
       border: none;
-      color: #fff;
+      color: var(--text-primary);
       padding: 18px 22px;
       font-size: 1.05rem;
-      font-weight: 600;
+      font-weight: 700;
       font-family: inherit;
       text-align: left;
       cursor: pointer;
@@ -207,7 +413,7 @@
 
     .badge-store {
       background: rgba(0, 229, 255, 0.15);
-      color: var(--cyan);
+      color: var(--highlight-color);
       border: 1px solid rgba(0, 229, 255, 0.3);
     }
 
@@ -220,56 +426,41 @@
 
     .accordion-item.active .chevron {
       transform: rotate(180deg);
-      color: var(--cyan);
+      color: var(--title-color);
     }
 
     .accordion-content {
       max-height: 0;
       overflow: hidden;
       transition: max-height 0.35s ease-out;
-      background: rgba(0, 0, 0, 0.25);
+      background: rgba(0, 0, 0, 0.2);
       border-top: 1px solid transparent;
-    }
-
-    .accordion-item.active .accordion-content {
-      border-top-color: var(--border);
     }
 
     .content-inner {
       padding: 24px;
       font-size: 0.95rem;
-      color: #d6d6d6;
+      color: var(--text-primary);
     }
 
-    .content-inner p {
-      margin-bottom: 14px;
-    }
-
-    .content-inner ul, .content-inner ol {
-      margin-left: 22px;
-      margin-bottom: 14px;
-    }
-
-    .content-inner li {
-      margin-bottom: 8px;
-    }
-
-    .content-inner strong {
-      color: #fff;
-    }
+    .content-inner p { margin-bottom: 14px; }
+    .content-inner ul, .content-inner ol { margin-left: 22px; margin-bottom: 14px; }
+    .content-inner li { margin-bottom: 8px; }
+    .content-inner strong { color: #fff; }
 
     .code-pill {
-      background: var(--code-bg);
-      color: var(--cyan);
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--highlight-color);
       padding: 2px 7px;
       border-radius: 4px;
       font-family: monospace;
       font-size: 0.88rem;
+      border: 1px solid var(--border-color);
     }
 
     .callout {
       background: rgba(200, 16, 46, 0.08);
-      border-left: 3px solid var(--red);
+      border-left: 3px solid var(--primary-accent);
       padding: 14px 18px;
       border-radius: 0 6px 6px 0;
       margin: 16px 0;
@@ -277,8 +468,8 @@
     }
 
     .step-box {
-      background: #232323;
-      border-left: 3px solid var(--green);
+      background: rgba(255, 255, 255, 0.04);
+      border-left: 3px solid var(--green-accent);
       padding: 12px 16px;
       margin-bottom: 10px;
       border-radius: 0 4px 4px 0;
@@ -288,8 +479,8 @@
        CALCULATOR STYLES
        ------------------------------------------- */
     .calc-container {
-      background: #141414;
-      border: 1px solid #333;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid var(--border-color);
       border-radius: 10px;
       padding: 24px;
       margin: 10px 0;
@@ -313,7 +504,7 @@
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      color: var(--text-muted);
+      color: var(--title-color);
       margin-bottom: 8px;
     }
 
@@ -328,37 +519,37 @@
       left: 14px;
       font-size: 1.15rem;
       font-weight: 700;
-      color: var(--cyan);
+      color: var(--highlight-color);
     }
 
     .calc-input {
       width: 100%;
-      background: #202020;
-      border: 2px solid #333;
+      background: var(--input-bg);
+      border: 1.5px solid var(--input-border);
       border-radius: 6px;
       padding: 12px 14px 12px 34px;
       font-size: 1.15rem;
       font-weight: 700;
-      color: #fff;
+      color: var(--text-primary);
       font-family: inherit;
       transition: border-color 0.2s, box-shadow 0.2s;
     }
 
     .calc-input:focus {
       outline: none;
-      border-color: var(--cyan);
-      box-shadow: 0 0 0 3px rgba(0, 229, 255, 0.2);
+      border-color: var(--input-focus);
+      box-shadow: 0 0 0 3px rgba(250, 160, 0, 0.25);
     }
 
     .calc-select {
       width: 100%;
-      background: #202020;
-      border: 2px solid #333;
+      background: var(--input-bg);
+      border: 1.5px solid var(--input-border);
       border-radius: 6px;
       padding: 12px 14px;
       font-size: 1rem;
       font-weight: 600;
-      color: #fff;
+      color: var(--text-primary);
       font-family: inherit;
       cursor: pointer;
       transition: border-color 0.2s;
@@ -366,9 +557,10 @@
 
     .calc-select:focus {
       outline: none;
-      border-color: var(--cyan);
+      border-color: var(--input-focus);
     }
 
+    /* Preset Quick Buttons */
     .presets-wrap {
       margin-bottom: 22px;
       display: flex;
@@ -380,28 +572,31 @@
     .presets-label {
       font-size: 0.8rem;
       color: var(--text-muted);
-      font-weight: 600;
+      font-weight: 700;
       margin-right: 4px;
+      text-transform: uppercase;
     }
 
     .preset-btn {
-      background: #242424;
-      border: 1px solid #3a3a3a;
-      color: #ddd;
+      background: var(--input-bg);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
       padding: 5px 12px;
       border-radius: 20px;
       font-size: 0.8rem;
-      font-weight: 600;
+      font-weight: 700;
       cursor: pointer;
       transition: all 0.15s ease;
     }
 
     .preset-btn:hover {
-      background: var(--red);
-      border-color: var(--red);
+      background: var(--primary-accent);
+      border-color: var(--primary-accent);
       color: #fff;
+      transform: translateY(-1px);
     }
 
+    /* Results Comparison Grid */
     .calc-results-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -416,25 +611,25 @@
     }
 
     .result-card {
-      background: #1c1c1c;
-      border: 1px solid #333;
+      background: var(--card-bg);
+      border: 1.5px solid var(--border-color);
       border-radius: 8px;
       padding: 18px 20px;
     }
 
     .result-card.card-onsite {
       border-color: rgba(39, 174, 96, 0.4);
-      background: linear-gradient(180deg, #1d2b22 0%, #171d18 100%);
+      background: linear-gradient(180deg, rgba(39, 174, 96, 0.12) 0%, rgba(20, 20, 20, 0.8) 100%);
     }
 
     .result-card.card-platform {
-      border-color: rgba(200, 16, 46, 0.3);
-      background: linear-gradient(180deg, #28191c 0%, #1c1718 100%);
+      border-color: rgba(200, 16, 46, 0.35);
+      background: linear-gradient(180deg, rgba(200, 16, 46, 0.1) 0%, rgba(20, 20, 20, 0.8) 100%);
     }
 
     .card-heading {
       font-size: 0.85rem;
-      font-weight: 700;
+      font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 0.5px;
       margin-bottom: 12px;
@@ -451,29 +646,30 @@
       justify-content: space-between;
       font-size: 0.9rem;
       margin-bottom: 8px;
-      color: #b0b0b0;
+      color: var(--text-muted);
     }
 
     .result-row.total {
-      border-top: 1px dashed #444;
+      border-top: 1px dashed var(--border-color);
       padding-top: 10px;
       margin-top: 10px;
       font-size: 1.1rem;
       font-weight: 800;
-      color: #fff;
+      color: var(--text-primary);
     }
 
     .net-val {
       font-size: 1.35rem;
-      font-weight: 800;
+      font-weight: 900;
     }
 
     .card-onsite .net-val { color: #2ecc71; }
     .card-platform .net-val { color: #ff5271; }
 
+    /* The Big Extra Cash Hero Box */
     .hero-savings-box {
       background: rgba(39, 174, 96, 0.12);
-      border: 2px solid var(--green);
+      border: 2px solid var(--green-accent);
       border-radius: 8px;
       padding: 22px;
       text-align: center;
@@ -507,7 +703,7 @@
     }
   </style>
 </head>
-<body>
+<body class="card-border-animated effect-laser-comet">
 
 <div class="container">
 
@@ -534,18 +730,18 @@
   <!-- Interactive Accordions -->
   <div class="accordion-list">
 
-    <!-- Section 2: Interactive Net Profit Calculator -->
+    <!-- Section 1: Interactive Net Profit Calculator (Placed First) -->
     <div class="accordion-item">
       <button class="accordion-header" onclick="toggleAccordion(this)">
         <div class="header-left">
           <span class="badge badge-calculator">Profit / ROI</span>
-          <span>2. Net In-Pocket Profit &amp; Fee Savings Calculator</span>
+          <span>1. Net In-Pocket Profit &amp; Fee Savings Calculator</span>
         </div>
         <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
       </button>
       <div class="accordion-content">
         <div class="content-inner">
-          <p>Third-party platforms charge substantial commissions on automotive parts. This calculator compares the exact <strong>NET cash that lands in Day's bank account</strong> when selling on <a href="/store/" target="_blank" class="doc-link">europartswest.com</a> (via Stripe) vs. other marketplace platforms:</p>
+          <p>Third-party platforms charge substantial commissions on automotive parts. This calculator compares the exact <strong>NET cash that lands in Day's bank account</strong> when selling on <a href="/store/" target="_blank" class="doc-link">europartswest.com</a> (via <a href="https://stripe.com" target="_blank" class="doc-link">Stripe</a>) vs. other marketplace platforms:</p>
 
           <!-- The Calculator Interface -->
           <div class="calc-container">
@@ -587,14 +783,16 @@
               <div class="result-card card-onsite">
                 <div class="card-heading">
                   <span>EuroPartsWest (Direct)</span>
-                  <span class="badge" style="background:#27ae60; color:#fff;">Stripe 2.9% + $0.30</span>
+                  <a href="https://stripe.com/pricing" target="_blank" class="badge" style="background:#27ae60; color:#fff; text-decoration:none;">
+                    Stripe 2.9% + $0.30 ↗
+                  </a>
                 </div>
                 <div class="result-row">
                   <span>Sale Gross:</span>
                   <span id="onsiteGross">$1,000.00</span>
                 </div>
                 <div class="result-row">
-                  <span>Processing Fee:</span>
+                  <span>Processing (<a href="https://stripe.com/pricing" target="_blank" class="doc-link" style="color:#2ecc71;">Stripe</a>):</span>
                   <span id="onsiteFee" style="color:#ff8585;">-$29.30</span>
                 </div>
                 <div class="result-row total">
@@ -607,7 +805,7 @@
               <div class="result-card card-platform">
                 <div class="card-heading">
                   <span id="platformCardName">eBay Motors</span>
-                  <span id="platformRateBadge" class="badge" style="background:#c8102e; color:#fff;">13.25% + $0.40</span>
+                  <span id="platformRateBadge" class="badge" style="background:var(--primary-accent); color:#fff;">13.25% + $0.40</span>
                 </div>
                 <div class="result-row">
                   <span>Sale Gross:</span>
@@ -637,18 +835,18 @@
           </div>
 
           <p style="font-size:0.85rem; color:var(--text-muted); margin-top:14px;">
-            *Note: Stripe standard processing is 2.9% + $0.30 per transaction. eBay Motors Parts &amp; Accessories baseline final value fee is 13.25% + $0.40. Amazon Automotive standard referral fee is 12.0%.
+            *Note: <a href="https://stripe.com/pricing" target="_blank" class="doc-link">Stripe</a> standard processing is 2.9% + $0.30 per transaction with zero monthly merchant fees. eBay Motors Parts &amp; Accessories baseline final value fee is 13.25% + $0.40. Amazon Automotive standard referral fee is 12.0%.
           </p>
         </div>
       </div>
     </div>
 
-    <!-- Section 1 (Opens by default on 1st visit) -->
+    <!-- Section 2: Two-Channel System -->
     <div class="accordion-item">
       <button class="accordion-header" onclick="toggleAccordion(this)">
         <div class="header-left">
           <span class="badge badge-store">Overview</span>
-          <span>1. How the Two-Channel Inventory System Works</span>
+          <span>2. How the Two-Channel Inventory System Works</span>
         </div>
         <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
       </button>
@@ -664,7 +862,7 @@
       </div>
     </div>
 
-    <!-- Section 3 -->
+    <!-- Section 3: Sveltia CMS -->
     <div class="accordion-item">
       <button class="accordion-header" onclick="toggleAccordion(this)">
         <div class="header-left">
@@ -711,7 +909,7 @@
       </div>
     </div>
 
-    <!-- Section 4 -->
+    <!-- Section 4: eBay Automation & Raw JSON Link -->
     <div class="accordion-item">
       <button class="accordion-header" onclick="toggleAccordion(this)">
         <div class="header-left">
@@ -730,7 +928,7 @@
             <li><strong>Destination:</strong> Outputs cleanly to <span class="code-pill">src/data/ebay-products.json</span>. It never touches or overwrites your custom CMS parts!</li>
           </ul>
 
-          <div class="callout" style="border-left-color: var(--cyan); background: rgba(0, 229, 255, 0.08);">
+          <div class="callout" style="border-left-color: var(--highlight-color); background: rgba(0, 229, 255, 0.08);">
             <strong>Inspect Raw Catalogue Data:</strong><br>
             You can view the live JSON file that powers all 119 synced store listings here:<br>
             👉 <a href="https://github.com/automybiz/EBay-To-GitHub-Pages-Store/blob/main/src/data/ebay-products.json" target="_blank" class="doc-link">View src/data/ebay-products.json on GitHub &rarr;</a>
@@ -739,7 +937,7 @@
       </div>
     </div>
 
-    <!-- Section 5 -->
+    <!-- Section 5: Customer Flow & GHL Integration -->
     <div class="accordion-item">
       <button class="accordion-header" onclick="toggleAccordion(this)">
         <div class="header-left">
@@ -764,6 +962,193 @@
 </div>
 
 <script>
+  // -------------------------------------------------------------
+  // HIGH-VELOCITY EDGE THEME & BORDER ANIMATION ENGINE
+  // -------------------------------------------------------------
+  const GLOBALS_HUB_SHEET_ID = "1u_mZhsYM3J7in_8clshqbRYzHuCC83i15OMz2i3aAHQ";
+  const SETTINGS_GATEWAY_URL = `https://ghl-custom-workflow-settings.automybiz.workers.dev/?action=styles&gsheet_globals_id=${GLOBALS_HUB_SHEET_ID}`;
+
+  async function fetchAndApplyLiveTheme() {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const isForceRefresh = urlParams.has('refresh') && urlParams.get('refresh') !== '0' && urlParams.get('refresh') !== 'false';
+      const fetchUrl = `${SETTINGS_GATEWAY_URL}${isForceRefresh ? '&refresh=1' : ''}&t=${Date.now()}`;
+
+      const response = await fetch(fetchUrl);
+      if (!response.ok) return;
+
+      const data = await response.json();
+      if (!data || !data.success) return;
+
+      let activeThemeName = "DARK EMERALD MAROON";
+      let tokens = {};
+
+      if (data.tokens && typeof data.tokens === 'object') {
+        tokens = data.tokens;
+        if (data.active_admin_theme_name) activeThemeName = data.active_admin_theme_name;
+        else if (data.active_theme_name) activeThemeName = data.active_theme_name;
+      } else if (Array.isArray(data.styles)) {
+        const sRows = data.styles;
+        
+        const adminRow = sRows.find(r => String(r[1] || r[0] || '').trim().toUpperCase() === "ACTIVE_ADMIN_THEME_NAME");
+        const generalRow = sRows.find(r => String(r[1] || r[0] || '').trim().toUpperCase() === "ACTIVE_THEME_NAME" || String(r[1] || r[0] || '').trim().toUpperCase() === "ACTIVE_PUBLIC_THEME_NAME");
+        
+        if (adminRow && (adminRow[2] || adminRow[1])) {
+          activeThemeName = String(adminRow[2] || adminRow[1]).trim().toUpperCase();
+        } else if (generalRow && (generalRow[2] || generalRow[1])) {
+          activeThemeName = String(generalRow[2] || generalRow[1]).trim().toUpperCase();
+        }
+
+        let activeColIdx = -1;
+        for (let r = 0; r < Math.min(sRows.length, 8); r++) {
+          const row = sRows[r];
+          for (let c = 2; c < row.length; c++) {
+            if (String(row[c] || '').trim().toUpperCase() === activeThemeName) {
+              activeColIdx = c;
+              break;
+            }
+          }
+          if (activeColIdx !== -1) break;
+        }
+
+        if (activeColIdx === -1) activeColIdx = 2;
+
+        for (let r = 0; r < sRows.length; r++) {
+          const k = String(sRows[r][1] || sRows[r][0] || '').trim().toUpperCase();
+          if (!k || k === "SETTING NAME" || k.startsWith("<--") || k.startsWith("<~~")) continue;
+          const val = sRows[r][activeColIdx];
+          if (val !== undefined && val !== null && String(val).trim() !== "") {
+            tokens[k] = String(val).trim();
+          }
+        }
+      }
+
+      // Check URL query override (?theme=DARK_RUBY_GOLD)
+      const queryTheme = urlParams.get('theme') || urlParams.get('active_theme');
+      if (queryTheme) {
+        activeThemeName = queryTheme.replace(/_/g, ' ').trim().toUpperCase();
+      }
+
+      console.log(`[EPW Guide Live Theme]: Active Theme -> ${activeThemeName}`);
+
+      // Map Sheet Tokens
+      const mainBg      = tokens["MAIN_BG_COLOR"] || "#100";
+      const cardBg      = tokens["CARD_BODY_BG_COLOR_1"] || tokens["CARD_BODY_BG_COLOR"] || "#201";
+      const borderClr   = tokens["MAIN_BORDER_COLOR"] || tokens["CARD_BORDER_COLOR_1"] || "#D12";
+      const cardBorder1 = tokens["CARD_BORDER_COLOR_1"] || borderClr;
+      const cardBorder2 = tokens["CARD_BORDER_COLOR_2"] || tokens["ACCENT_COLOR_2"] || "#3BF";
+      const titleClr    = tokens["MAIN_TITLE_TEXT_COLOR_1"] || "#FA0";
+      const textPrimary = tokens["MAIN_TEXT_COLOR_1"] || "#FFF";
+      const textMuted   = tokens["MAIN_TEXT_COLOR_2"] || "#AAA";
+      const primaryBtn  = tokens["BTN_SAVE_BG_COLOR"] || tokens["ACCENT_COLOR_1"] || "#D12";
+      const highlight   = tokens["MAIN_LINK_COLOR_1"] || tokens["SECTION_TITLE_TEXT_COLOR"] || "#0FF";
+      const inputBg     = tokens["INPUT_BG_COLOR_1"] || "#100";
+      const inputBorder = tokens["INPUT_BORDER_COLOR"] || "#411";
+      const inputFocus  = tokens["INPUT_FOCUS_BORDER_COLOR"] || titleClr;
+
+      // Special Effects & Animated Border Settings
+      const fx1 = tokens["SPECIAL_EFFECTS_COLOR_1"] || "#064";
+      const fx2 = tokens["SPECIAL_EFFECTS_COLOR_2"] || "#0FF";
+      const fx3 = tokens["SPECIAL_EFFECTS_COLOR_3"] || "#3BF";
+      const fx4 = tokens["SPECIAL_EFFECTS_COLOR_4"] || "#A85";
+
+      const isAnimateEnabled = (tokens['CARD_BORDER_ANIMATE_ENABLE'] === true || String(tokens['CARD_BORDER_ANIMATE_ENABLE']).toUpperCase() === 'TRUE' || tokens['CARD_BORDER_ANIMATE_ENABLE'] === undefined);
+      const animSpeed = tokens['CARD_BORDER_ANIMATE_SPEED'] || '5s';
+      const animEffect = String(tokens['CARD_BORDER_ANIMATE_EFFECT'] || 'Laser Comet').toLowerCase().replace(/\s+/g, '-');
+
+      // Bind animation classes directly to body
+      document.body.style.setProperty('--card-border-speed', animSpeed);
+      document.body.classList.toggle('card-border-animated', isAnimateEnabled);
+      document.body.classList.remove('effect-laser-comet', 'effect-dual-tone-blend', 'effect-hue-sweep', 'effect-fx-rainbow');
+      if (isAnimateEnabled) {
+        document.body.classList.add(`effect-${animEffect}`);
+      }
+
+      const generatedCss = `
+        :root {
+          --page-bg: ${mainBg} !important;
+          --card-bg: ${cardBg} !important;
+          --border-color: ${borderClr} !important;
+          --card-border-color-1: ${cardBorder1} !important;
+          --card-border-color-2: ${cardBorder2} !important;
+          --primary-accent: ${primaryBtn} !important;
+          --highlight-color: ${highlight} !important;
+          --title-color: ${titleClr} !important;
+          --text-primary: ${textPrimary} !important;
+          --text-muted: ${textMuted} !important;
+          --input-bg: ${inputBg} !important;
+          --input-border: ${inputBorder} !important;
+          --input-focus: ${inputFocus} !important;
+
+          --special-effects-color-1: ${fx1} !important;
+          --special-effects-color-2: ${fx2} !important;
+          --special-effects-color-3: ${fx3} !important;
+          --special-effects-color-4: ${fx4} !important;
+        }
+
+        body {
+          background-color: ${mainBg} !important;
+          color: ${textPrimary} !important;
+        }
+
+        .header-text h1 span {
+          color: ${primaryBtn} !important;
+        }
+
+        .btn-back {
+          background: ${primaryBtn} !important;
+        }
+
+        .accordion-item {
+          background: ${cardBg} !important;
+          border-color: ${borderClr} !important;
+        }
+
+        .accordion-header {
+          color: ${textPrimary} !important;
+        }
+
+        .code-pill {
+          color: ${highlight} !important;
+          border-color: ${borderClr} !important;
+        }
+
+        .calc-input, .calc-select {
+          background: ${inputBg} !important;
+          border-color: ${inputBorder} !important;
+          color: ${textPrimary} !important;
+        }
+
+        .calc-input:focus, .calc-select:focus {
+          border-color: ${inputFocus} !important;
+        }
+      `;
+
+      let liveStyleEl = document.getElementById('epwDynamicThemeStyles');
+      if (!liveStyleEl) {
+        liveStyleEl = document.createElement('style');
+        liveStyleEl.id = 'epwDynamicThemeStyles';
+        document.head.appendChild(liveStyleEl);
+      }
+      liveStyleEl.textContent = generatedCss;
+
+      localStorage.setItem('epw_live_theme_css', generatedCss);
+      localStorage.setItem('epw_live_theme_name', activeThemeName);
+
+      // Refresh open accordion height
+      const activeAccordion = document.querySelector('.accordion-item.active');
+      if (activeAccordion) {
+        const content = activeAccordion.querySelector('.accordion-content');
+        content.style.maxHeight = content.scrollHeight + "px";
+      }
+
+    } catch (err) {
+      console.warn("[EPW Theme Handshake]:", err);
+    }
+  }
+
+  fetchAndApplyLiveTheme();
+
   // -------------------------------------------------------------
   // ACCORDION PERSISTENCE & TOGGLE (with localStorage)
   // -------------------------------------------------------------
@@ -796,12 +1181,10 @@
       const index = allItems.indexOf(item);
       localStorage.setItem(STORAGE_KEY, index);
     } else {
-      // If user closed the open accordion, save -1 (all closed)
       localStorage.setItem(STORAGE_KEY, '-1');
     }
   }
 
-  // Auto-resize active accordion if window size changes
   window.addEventListener('resize', () => {
     const activeItem = document.querySelector('.accordion-item.active');
     if (activeItem) {
@@ -862,7 +1245,7 @@
     document.getElementById('savingsPlatformName').innerText = platform.name;
     document.getElementById('savingsPercentage').innerText = savingsPercent + '%';
 
-    // If the calculator accordion is currently open, adjust its height dynamically
+    // Adjust accordion height if currently active
     const calcAccordion = document.querySelector('.badge-calculator').closest('.accordion-item');
     if (calcAccordion && calcAccordion.classList.contains('active')) {
       const content = calcAccordion.querySelector('.accordion-content');
@@ -874,10 +1257,9 @@
   // INITIALIZATION ON PAGE LOAD
   // -------------------------------------------------------------
   document.addEventListener('DOMContentLoaded', () => {
-    // 1. Calculate default savings values
     calculateSavings();
 
-    // 2. Determine which accordion to open (Default: 0 = 1st accordion)
+    // Open 1st accordion by default (or restore last user-clicked accordion)
     const allItems = Array.from(document.querySelectorAll('.accordion-item'));
     const savedIndex = localStorage.getItem(STORAGE_KEY);
 
