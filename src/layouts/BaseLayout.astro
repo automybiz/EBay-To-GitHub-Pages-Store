@@ -66,7 +66,12 @@ const NOINDEX_STAGING = true;
             />
           </a>
         </div>
-        <ul class="nav-links">
+        <button id="menuToggle" class="hamburger" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="primaryNav">
+          <span class="hamburger-bar"></span>
+          <span class="hamburger-bar"></span>
+          <span class="hamburger-bar"></span>
+        </button>
+        <ul class="nav-links" id="primaryNav">
           {/*
             STAGING: the storefront is intentionally not on the menu yet.
             Re-add these two entries when you launch:
@@ -142,6 +147,26 @@ const NOINDEX_STAGING = true;
         }
         updateThemeUI(next);
       });
+
+      // Mobile hamburger menu — ported from assets/js/app.js
+      const menuToggle = document.getElementById('menuToggle');
+      const primaryNav = document.getElementById('primaryNav');
+      if (menuToggle && primaryNav) {
+        const setMenu = (open: boolean) => {
+          primaryNav.classList.toggle('open', open);
+          menuToggle.classList.toggle('open', open);
+          menuToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        };
+        menuToggle.addEventListener('click', () => {
+          setMenu(!primaryNav.classList.contains('open'));
+        });
+        primaryNav.addEventListener('click', (event) => {
+          if ((event.target as HTMLElement).closest('a')) setMenu(false);
+        });
+        window.addEventListener('resize', () => {
+          if (window.innerWidth > 768) setMenu(false);
+        });
+      }
     </script>
   </body>
 </html>

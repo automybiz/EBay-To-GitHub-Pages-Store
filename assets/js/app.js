@@ -73,6 +73,28 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize theme
     setTheme(getPreferredTheme());
 
+    // Mobile hamburger menu
+    const menuToggle = document.getElementById('menuToggle');
+    const primaryNav = document.getElementById('primaryNav');
+    if (menuToggle && primaryNav) {
+        const setMenu = (open) => {
+            primaryNav.classList.toggle('open', open);
+            menuToggle.classList.toggle('open', open);
+            menuToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        };
+        menuToggle.addEventListener('click', () => {
+            setMenu(!primaryNav.classList.contains('open'));
+        });
+        // Close the menu after tapping a link.
+        primaryNav.addEventListener('click', (event) => {
+            if (event.target.closest('a')) setMenu(false);
+        });
+        // Reset when switching back to the desktop layout.
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 768) setMenu(false);
+        });
+    }
+
     // Fetch products from JSON
     if (productGrid && window.location.protocol === 'file:') {
         productGrid.innerHTML = `

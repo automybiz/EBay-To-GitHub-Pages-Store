@@ -397,26 +397,76 @@ footer {
     color: var(--primary);
 }
 
+/* --------------------------------------------------------------------------
+   Hamburger menu button (mobile only)
+   -------------------------------------------------------------------------- */
+.hamburger {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    width: 42px;
+    height: 42px;
+    padding: 9px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-color);
+}
+
+.hamburger-bar {
+    display: block;
+    width: 100%;
+    height: 2.5px;
+    border-radius: 2px;
+    background: var(--text-color);
+    transition: transform 0.25s ease, opacity 0.2s ease;
+}
+
+.hamburger.open .hamburger-bar:nth-child(1) { transform: translateY(7.5px) rotate(45deg); }
+.hamburger.open .hamburger-bar:nth-child(2) { opacity: 0; }
+.hamburger.open .hamburger-bar:nth-child(3) { transform: translateY(-7.5px) rotate(-45deg); }
+
 @media (max-width: 768px) {
     .hero h1 { font-size: 2rem; }
     .search-bar input { width: 100%; }
     .section-header { flex-direction: column; align-items: flex-start; }
-    .nav-links { margin-bottom: 10px; }
-    .theme-toggle { margin-left: 0; margin-top: 10px; }
 
-    /* Mobile header: shrink the logo and let the menu wrap so the header is
-       never wider than the viewport. A too-wide header was forcing the whole
-       page wider than the screen, which clipped the content on phones. */
+    /* Mobile header: logo on the left, theme toggle + hamburger on the right,
+       and the menu collapses into a full-width dropdown. Shrinking the logo
+       also keeps the header from ever being wider than the viewport. */
     :root { --logo-height: 66px; }
     body > header { padding: 14px 0; }
-    nav { flex-wrap: wrap; row-gap: 8px; }
-    .nav-links { flex-wrap: wrap; justify-content: center; row-gap: 4px; }
-    .nav-links li { margin-left: 14px; }
+
+    nav {
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        row-gap: 0;
+    }
+    .logo { order: 0; margin-right: 0; }
+    .theme-toggle { order: 1; margin-left: auto; margin-top: 0; }
+    .hamburger { order: 2; display: flex; }
+
+    .nav-links {
+        order: 3;
+        flex-basis: 100%;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 2px;
+        margin: 12px 0 4px;
+        padding: 0;
+        display: none;
+    }
+    .nav-links.open { display: flex; }
+    .nav-links li { margin-left: 0; }
+    .nav-links a { display: block; padding: 10px 8px; border-radius: 6px; }
+    .nav-links a:hover { background: rgba(200, 16, 46, 0.12); }
 }
 
 @media (max-width: 520px) {
     :root { --logo-height: 52px; }
     .container { padding: 0 14px; }
-    .nav-links li { margin-left: 10px; }
 }
 
