@@ -86,3 +86,12 @@ collections:
             widget: image
             required: false
             hint: Swapped into the main photo when this option is selected.
+
+  - name: "guide"
+    label: "📖 System Guide"
+    files:
+      - file: "public/admin/guide.html"
+        label: "System Architecture & Accordions"
+        name: "epw_guide"
+        fields:
+          - { label: "Guide File", name: "body", widget: "markdown" }
