@@ -14,9 +14,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <script>
-    /* ==========================================================================
-       Universal Dark Reader Kill Switch
-       ========================================================================== */
+    /* Universal Dark Reader Kill Switch */
     (function() {
       function disarmDarkReader() {
         const drStyles = document.querySelectorAll('style.darkreader, style[class*="darkreader"]');
@@ -193,9 +191,7 @@
       opacity: 0.85;
     }
 
-    /* ==========================================================================
-       Decoupled Dual-Engine Border Animation Architecture (@property Isolated)
-       ========================================================================== */
+    /* Decoupled Dual-Engine Border Animation Architecture (@property Isolated) */
     @property --border-angle {
       syntax: "<angle>";
       inherits: false;
@@ -209,12 +205,8 @@
     }
 
     @keyframes flowBeamRail {
-      0% {
-        background-position: 0% 50%;
-      }
-      100% {
-        background-position: 300% 50%;
-      }
+      0% { background-position: 0% 50%; }
+      100% { background-position: 300% 50%; }
     }
 
     .accordion-list {
@@ -359,9 +351,7 @@
       animation: flowBeamRail var(--card-border-speed, 5s) linear infinite !important;
     }
 
-    /* ==========================================================================
-       Accordion Header - Bound to CARD_TITLE_BG_COLOR_1 & CARD_TITLE_TEXT_COLOR_1
-       ========================================================================== */
+    /* Accordion Header - Bound to CARD_TITLE_BG_COLOR_1 & CARD_TITLE_TEXT_COLOR_1 */
     .accordion-header {
       width: 100%;
       background: var(--card-title-bg-color-1);
@@ -571,6 +561,7 @@
       border-color: var(--input-focus);
     }
 
+    /* Preset Quick Buttons */
     .presets-wrap {
       margin-bottom: 22px;
       display: flex;
@@ -606,6 +597,7 @@
       transform: translateY(-1px);
     }
 
+    /* Results Comparison Grid */
     .calc-results-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -675,6 +667,7 @@
     .card-onsite .net-val { color: #2ecc71; }
     .card-platform .net-val { color: #ff5271; }
 
+    /* The Big Extra Cash Hero Box */
     .hero-savings-box {
       background: rgba(39, 174, 96, 0.12);
       border: 2px solid var(--green-accent);
@@ -933,24 +926,24 @@
             <li><strong>Official API:</strong> Authenticates with eBay's developer API using secure credentials.</li>
             <li><strong>Ultra-High Resolution:</strong> Upscales low-res thumbnails to 1600px <span class="code-pill">s-l1600.jpg</span> photos and collects full multi-image galleries (up to 15 photos per part).</li>
             <li><strong>OEM Specs Extraction:</strong> Extracts manufacturer part numbers (MPN), interchange numbers, voltages, and fitment notes directly into structured technical spec tables.</li>
-            <li><strong>Destination:</strong> Outputs cleanly to <span class="code-pill">src/data/ebay-products.json</span>. It never touches or overwrites your custom CMS parts!</li>
+            <li><strong>Destination:</strong> Outputs cleanly to <span class="code-pill">/data/ebay-products.json</span>. It never touches or overwrites your custom CMS parts!</li>
           </ul>
 
           <div class="callout" style="border-left-color: var(--highlight-color); background: rgba(0, 229, 255, 0.08);">
             <strong>Inspect Raw Catalogue Data:</strong><br>
-            You can view the live JSON file that powers all synced store listings here:<br>
-            👉 <a href="https://github.com/automybiz/EBay-To-GitHub-Pages-Store/blob/main/src/data/ebay-products.json" target="_blank" class="doc-link">View src/data/ebay-products.json on GitHub &rarr;</a>
+            You can view the live JSON file that powers all synced store listings directly in your browser's interactive JSON viewer:<br>
+            👉 <a href="/data/ebay-products.json" target="_blank" class="doc-link">View /data/ebay-products.json &rarr;</a>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Section 5: Customer Flow & GHL Integration -->
+    <!-- Section 5: Customer Flow & AutoMyBiz Integration -->
     <div class="accordion-item">
       <button class="accordion-header" onclick="toggleAccordion(this)">
         <div class="header-left">
           <span class="badge badge-store">Customer Flow</span>
-          <span>5. How Inquiries &amp; Orders Flow into GoHighLevel</span>
+          <span>5. How Inquiries &amp; Orders Flow into AutoMyBiz</span>
         </div>
         <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
       </button>
@@ -960,7 +953,7 @@
           <ul>
             <li>When a buyer clicks <strong>Inquire About This Part</strong> or <strong>Order Direct</strong>, they are taken directly to <a href="/inquiry.html" target="_blank" class="doc-link">europartswest.com/inquiry.html</a>.</li>
             <li><strong>Automatic Pre-Fill:</strong> The exact part title, brand, quantity, and chosen variant SKU are pre-filled in the inquiry form automatically through URL parameters.</li>
-            <li><strong>CRM Integration:</strong> When submitted, the inquiry fires directly into <strong>GoHighLevel</strong> via webhook, alerting the business owner immediately via SMS/Email with zero manual entry required.</li>
+            <li><strong>CRM Integration:</strong> When submitted, the inquiry fires directly into <strong>AutoMyBiz</strong> via webhook, alerting the business owner immediately via SMS/Email with zero manual entry required.</li>
           </ul>
         </div>
       </div>
