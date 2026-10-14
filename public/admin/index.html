@@ -3,33 +3,152 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- Never index the admin UI. -->
     <meta name="robots" content="noindex" />
     <title>EuroPartsWest — Content Manager</title>
+    
+    <style>
+      /* Modal Overlay Styles */
+      .guide-modal-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 9999999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s ease;
+      }
 
+      .guide-modal-overlay.open {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .guide-modal-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.82);
+        backdrop-filter: blur(8px);
+      }
+
+      .guide-modal-container {
+        position: relative;
+        width: 94vw;
+        max-width: 1060px;
+        height: 88vh;
+        background: #121212;
+        border: 1.5px solid #00e5ff;
+        border-radius: 12px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9), 0 0 30px rgba(0, 229, 255, 0.2);
+        overflow: hidden;
+        z-index: 2;
+        transform: scale(0.96);
+        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .guide-modal-overlay.open .guide-modal-container {
+        transform: scale(1);
+      }
+
+      .guide-modal-close-btn {
+        position: absolute;
+        top: 14px;
+        right: 18px;
+        z-index: 10;
+        background: rgba(30, 30, 30, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #fff;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 16px;
+        line-height: 1;
+        transition: all 0.2s ease;
+      }
+
+      .guide-modal-close-btn:hover {
+        background: #c8102e;
+        border-color: #c8102e;
+        transform: scale(1.1);
+      }
+
+      .guide-modal-iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+        display: block;
+        background: #121212;
+      }
+    </style>
   </head>
   <body>
-    <!--
-      Sveltia CMS — a drop-in, Decap/Netlify-CMS compatible editor.
-      Loaded from the CDN as an ES module; all configuration lives in the
-      sibling config.yml file.
-    -->
-    <!-- Injects single Floating Guide Button -->
+
+    <!-- Modal Overlay Container -->
+    <div id="guideModalOverlay" class="guide-modal-overlay">
+      <div class="guide-modal-backdrop" onclick="closeGuideModal()"></div>
+      <div class="guide-modal-container">
+        <button type="button" class="guide-modal-close-btn" onclick="closeGuideModal()" title="Close Guide (Esc)">✕</button>
+        <iframe id="guideModalIframe" class="guide-modal-iframe" src="" loading="lazy"></iframe>
+      </div>
+    </div>
+
+    <!-- Sveltia CMS Core Script -->
+    <script src="https://unpkg.com/@sveltia/cms/dist/sveltia-cms.js" type="module"></script>
+
+    <!-- Floating Guide Launcher & Modal Controller -->
     <script>
+      function openGuideModal() {
+        const overlay = document.getElementById('guideModalOverlay');
+        const iframe = document.getElementById('guideModalIframe');
+        if (overlay && iframe) {
+          if (!iframe.src || iframe.src === 'about:blank' || !iframe.src.includes('guide.html')) {
+            iframe.src = '/admin/guide.html';
+          }
+          overlay.classList.add('open');
+        }
+      }
+
+      function closeGuideModal() {
+        const overlay = document.getElementById('guideModalOverlay');
+        if (overlay) {
+          overlay.classList.remove('open');
+        }
+      }
+
+      // Close when pressing Esc from outside or inside
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeGuideModal();
+      });
+
+      // Listen for close signal from inside guide.html
+      window.addEventListener('message', (e) => {
+        if (e.data === 'close-guide-modal') closeGuideModal();
+      });
+
+      // Injects single Floating Guide Button
       window.addEventListener('load', () => {
         setTimeout(() => {
           if (!document.getElementById('epw-guide-btn')) {
-            const btn = document.createElement('a');
+            const btn = document.createElement('button');
             btn.id = 'epw-guide-btn';
-            btn.href = '/admin/guide.html';
-            btn.target = '_blank';
-            btn.innerHTML = '📖 System Guide &amp; Docs ↗';
-            btn.style.cssText = 'position:fixed;bottom:25px;right:25px;z-index:999999;background:#c8102e;color:#fff;padding:12px 22px;border-radius:30px;font-family:sans-serif;font-weight:bold;font-size:13px;text-decoration:none;box-shadow:0 4px 20px rgba(0,0,0,0.8);display:flex;align-items:center;gap:8px;';
+            btn.type = 'button';
+            btn.onclick = openGuideModal;
+            btn.innerHTML = '📖 System Guide &amp; Docs';
+            btn.style.cssText = 'position:fixed;bottom:25px;right:25px;z-index:999999;background:#c8102e;color:#fff;padding:12px 22px;border-radius:30px;font-family:sans-serif;font-weight:bold;font-size:13px;border:none;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,0.8);display:flex;align-items:center;gap:8px;transition:transform 0.2s, background 0.2s;';
+            btn.onmouseenter = () => btn.style.transform = 'translateY(-2px)';
+            btn.onmouseleave = () => btn.style.transform = 'none';
             document.body.appendChild(btn);
           }
         }, 800);
       });
     </script>
-    <script src="https://unpkg.com/@sveltia/cms/dist/sveltia-cms.js" type="module"></script>
   </body>
 </html>

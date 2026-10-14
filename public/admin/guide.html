@@ -16,8 +16,6 @@
   <script>
     /* ==========================================================================
        Universal Dark Reader Kill Switch
-       Strips Dark Reader stylesheets so your Google Sheet theme colors
-       and neon animated borders render 100% natively without color inversion.
        ========================================================================== */
     (function() {
       function disarmDarkReader() {
@@ -40,7 +38,7 @@
     })();
   </script>
 
-  <!-- Instant Head Pre-Hydration to prevent FOUC (Flash of Unstyled Content) -->
+  <!-- Instant Head Pre-Hydration to prevent FOUC -->
   <script>
     (function() {
       try {
@@ -60,6 +58,10 @@
       /* Base Theme Tokens */
       --page-bg: #121212;
       --card-bg: #1c1c1c;
+      --card-title-bg-color-1: #033;
+      --card-title-bg-color-2: #044;
+      --card-title-text-color-1: #0FF;
+      --card-title-text-color-2: #FFF;
       --card-border-color-1: #0FF;
       --card-border-color-2: #3BF;
       --card-border-speed: 5s;
@@ -99,7 +101,7 @@
       background-size: 16px 16px;
       color: var(--text-primary);
       line-height: 1.6;
-      padding: 40px 20px 80px;
+      padding: 30px 20px 60px;
       transition: background-color 0.25s ease, color 0.25s ease;
     }
 
@@ -110,9 +112,9 @@
 
     /* Header */
     .header {
-      margin-bottom: 30px;
+      margin-bottom: 25px;
       border-bottom: 1px solid var(--border-color);
-      padding-bottom: 25px;
+      padding-bottom: 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -145,6 +147,9 @@
       font-weight: 700;
       font-size: 0.9rem;
       transition: background 0.2s, transform 0.2s;
+      cursor: pointer;
+      border: none;
+      font-family: inherit;
     }
 
     .btn-back:hover {
@@ -157,8 +162,8 @@
       background: rgba(0, 229, 255, 0.04);
       border: 1px solid var(--border-color);
       border-radius: 8px;
-      padding: 18px 22px;
-      margin-bottom: 30px;
+      padding: 16px 20px;
+      margin-bottom: 25px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -177,7 +182,6 @@
       font-weight: bold;
     }
 
-    /* Links in content */
     a.doc-link {
       color: var(--highlight-color);
       text-decoration: underline;
@@ -213,7 +217,6 @@
       }
     }
 
-    /* Base Accordion Item (Closed state: subtle border, no animation) */
     .accordion-list {
       display: flex;
       flex-direction: column;
@@ -240,7 +243,6 @@
     }
 
     .card-border-animated .accordion-item.active .accordion-header {
-      border-bottom: none !important;
       position: relative;
     }
 
@@ -358,14 +360,14 @@
     }
 
     /* ==========================================================================
-       Accordion Typography & Internal Controls
+       Accordion Header - Bound to CARD_TITLE_BG_COLOR_1 & CARD_TITLE_TEXT_COLOR_1
        ========================================================================== */
     .accordion-header {
       width: 100%;
-      background: none;
+      background: var(--card-title-bg-color-1);
       border: none;
-      color: var(--text-primary);
-      padding: 18px 22px;
+      color: var(--card-title-text-color-1);
+      padding: 16px 22px;
       font-size: 1.05rem;
       font-weight: 700;
       font-family: inherit;
@@ -375,6 +377,17 @@
       justify-content: space-between;
       align-items: center;
       user-select: none;
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    .accordion-header:hover {
+      background: var(--card-title-bg-color-2);
+      color: var(--card-title-text-color-2);
+    }
+
+    .accordion-item.active .accordion-header {
+      background: var(--card-title-bg-color-2);
+      color: var(--card-title-text-color-1);
     }
 
     .header-left {
@@ -426,7 +439,7 @@
 
     .accordion-item.active .chevron {
       transform: rotate(180deg);
-      color: var(--title-color);
+      color: var(--highlight-color);
     }
 
     .accordion-content {
@@ -475,9 +488,7 @@
       border-radius: 0 4px 4px 0;
     }
 
-    /* -------------------------------------------
-       CALCULATOR STYLES
-       ------------------------------------------- */
+    /* Calculator Styles */
     .calc-container {
       background: rgba(0, 0, 0, 0.35);
       border: 1px solid var(--border-color);
@@ -560,7 +571,6 @@
       border-color: var(--input-focus);
     }
 
-    /* Preset Quick Buttons */
     .presets-wrap {
       margin-bottom: 22px;
       display: flex;
@@ -596,7 +606,6 @@
       transform: translateY(-1px);
     }
 
-    /* Results Comparison Grid */
     .calc-results-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -666,7 +675,6 @@
     .card-onsite .net-val { color: #2ecc71; }
     .card-platform .net-val { color: #ff5271; }
 
-    /* The Big Extra Cash Hero Box */
     .hero-savings-box {
       background: rgba(39, 174, 96, 0.12);
       border: 2px solid var(--green-accent);
@@ -713,7 +721,7 @@
       <h1>EuroPartsWest <span>// System Architecture Guide</span></h1>
       <p>Operational instructions for managing the catalog, eBay sync, and custom variant inventory.</p>
     </div>
-    <a href="/admin/" class="btn-back">&larr; Return to Admin Dashboard</a>
+    <button type="button" class="btn-back" onclick="handleReturnClick(event)">&larr; Return to Admin Dashboard</button>
   </div>
 
   <!-- Visual Architecture Banner -->
@@ -741,7 +749,7 @@
       </button>
       <div class="accordion-content">
         <div class="content-inner">
-          <p>Third-party platforms charge substantial commissions on automotive parts. This calculator compares the exact <strong>NET cash that lands in Day's bank account</strong> when selling on <a href="/store/" target="_blank" class="doc-link">europartswest.com</a> (via <a href="https://stripe.com" target="_blank" class="doc-link">Stripe</a>) vs. other marketplace platforms:</p>
+          <p>Third-party platforms charge substantial commissions on automotive parts. This calculator compares the exact <strong>NET cash that lands in the owner's bank account</strong> when selling directly on <a href="/store/" target="_blank" class="doc-link">europartswest.com</a> (via <a href="https://stripe.com" target="_blank" class="doc-link">Stripe</a>) vs. other marketplace platforms:</p>
 
           <!-- The Calculator Interface -->
           <div class="calc-container">
@@ -825,10 +833,10 @@
 
             <!-- Hero In-Pocket Savings Box -->
             <div class="hero-savings-box">
-              <div class="savings-sub">Extra Cash In Day's Pocket On This Sale</div>
+              <div class="savings-sub">Extra Cash In the Owner's Pocket On This Sale</div>
               <div class="savings-number">+$<span id="savingsAmount">103.60</span></div>
               <div class="savings-note">
-                By selling this part on <strong style="color:#fff;">europartswest.com</strong> instead of <strong id="savingsPlatformName" style="color:#fff;">eBay</strong>, you keep <span id="savingsPercentage" style="font-weight:700; color:#2ecc71;">10.4%</span> more of the transaction!
+                By selling this part on <strong style="color:#fff;">europartswest.com</strong> instead of <strong id="savingsPlatformName" style="color:#fff;">eBay</strong>, the business owner keeps <span id="savingsPercentage" style="font-weight:700; color:#2ecc71;">10.4%</span> more of the transaction!
               </div>
             </div>
 
@@ -852,10 +860,10 @@
       </button>
       <div class="accordion-content">
         <div class="content-inner">
-          <p>Euro Parts West runs on a <strong>dual-channel inventory engine</strong> designed to give Day the flexibility to sell everywhere while keeping direct profits on his own site:</p>
+          <p>Euro Parts West runs on a <strong>dual-channel inventory engine</strong> designed to give the business owner the flexibility to sell everywhere while keeping direct profits on your own site:</p>
           <ol>
             <li><strong>Channel 1 (eBay Synced Catalog):</strong> Automatically mirrors parts listed on the official eBay store. Upscales thumbnails to full 1600px resolution, extracts OEM technical specifications, and strips external links so customers stay on the site.</li>
-            <li><strong>Channel 2 (Direct Sveltia Inventory):</strong> Day’s private dashboard at <a href="/admin/" target="_blank" class="doc-link">europartswest.com/admin/</a> where he can create custom packages, add multiple variants (finishes, sizes, voltages), set direct pricing, and bypass third-party seller fees.</li>
+            <li><strong>Channel 2 (Direct Sveltia Inventory):</strong> The owner's private dashboard at <a href="/admin/" target="_blank" class="doc-link">europartswest.com/admin/</a> where custom packages can be created with multiple variants (finishes, sizes, voltages), custom pricing, and zero third-party marketplace fees.</li>
           </ol>
           <p>Both streams automatically merge together into the live store catalog at <a href="/store/" target="_blank" class="doc-link">europartswest.com/store/</a>.</p>
         </div>
@@ -952,7 +960,7 @@
           <ul>
             <li>When a buyer clicks <strong>Inquire About This Part</strong> or <strong>Order Direct</strong>, they are taken directly to <a href="/inquiry.html" target="_blank" class="doc-link">europartswest.com/inquiry.html</a>.</li>
             <li><strong>Automatic Pre-Fill:</strong> The exact part title, brand, quantity, and chosen variant SKU are pre-filled in the inquiry form automatically through URL parameters.</li>
-            <li><strong>CRM Integration:</strong> When submitted, the inquiry fires directly into <strong>GoHighLevel</strong> via webhook, alerting Day immediately via SMS/Email with zero manual entry required.</li>
+            <li><strong>CRM Integration:</strong> When submitted, the inquiry fires directly into <strong>GoHighLevel</strong> via webhook, alerting the business owner immediately via SMS/Email with zero manual entry required.</li>
           </ul>
         </div>
       </div>
@@ -962,6 +970,27 @@
 </div>
 
 <script>
+  // -------------------------------------------------------------
+  // CLOSE MODAL & ESCAPE DISPATCHER (FOR IFRAME OVERLAYS)
+  // -------------------------------------------------------------
+  function handleReturnClick(e) {
+    if (window.parent && window.parent !== window) {
+      if (e) e.preventDefault();
+      window.parent.postMessage('close-guide-modal', '*');
+    } else {
+      window.location.href = '/admin/';
+    }
+  }
+
+  // Forward Esc key from inside iframe to parent overlay
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage('close-guide-modal', '*');
+      }
+    }
+  });
+
   // -------------------------------------------------------------
   // HIGH-VELOCITY EDGE THEME & BORDER ANIMATION ENGINE
   // -------------------------------------------------------------
@@ -1023,7 +1052,6 @@
         }
       }
 
-      // Check URL query override (?theme=DARK_RUBY_GOLD)
       const queryTheme = urlParams.get('theme') || urlParams.get('active_theme');
       if (queryTheme) {
         activeThemeName = queryTheme.replace(/_/g, ' ').trim().toUpperCase();
@@ -1032,19 +1060,23 @@
       console.log(`[EPW Guide Live Theme]: Active Theme -> ${activeThemeName}`);
 
       // Map Sheet Tokens
-      const mainBg      = tokens["MAIN_BG_COLOR"] || "#100";
-      const cardBg      = tokens["CARD_BODY_BG_COLOR_1"] || tokens["CARD_BODY_BG_COLOR"] || "#201";
-      const borderClr   = tokens["MAIN_BORDER_COLOR"] || tokens["CARD_BORDER_COLOR_1"] || "#D12";
-      const cardBorder1 = tokens["CARD_BORDER_COLOR_1"] || borderClr;
-      const cardBorder2 = tokens["CARD_BORDER_COLOR_2"] || tokens["ACCENT_COLOR_2"] || "#3BF";
-      const titleClr    = tokens["MAIN_TITLE_TEXT_COLOR_1"] || "#FA0";
-      const textPrimary = tokens["MAIN_TEXT_COLOR_1"] || "#FFF";
-      const textMuted   = tokens["MAIN_TEXT_COLOR_2"] || "#AAA";
-      const primaryBtn  = tokens["BTN_SAVE_BG_COLOR"] || tokens["ACCENT_COLOR_1"] || "#D12";
-      const highlight   = tokens["MAIN_LINK_COLOR_1"] || tokens["SECTION_TITLE_TEXT_COLOR"] || "#0FF";
-      const inputBg     = tokens["INPUT_BG_COLOR_1"] || "#100";
-      const inputBorder = tokens["INPUT_BORDER_COLOR"] || "#411";
-      const inputFocus  = tokens["INPUT_FOCUS_BORDER_COLOR"] || titleClr;
+      const mainBg        = tokens["MAIN_BG_COLOR"] || "#100";
+      const cardBg        = tokens["CARD_BODY_BG_COLOR_1"] || tokens["CARD_BODY_BG_COLOR"] || "#201";
+      const cardTitleBg1  = tokens["CARD_TITLE_BG_COLOR_1"] || "#033";
+      const cardTitleBg2  = tokens["CARD_TITLE_BG_COLOR_2"] || "#044";
+      const cardTitleTxt1 = tokens["CARD_TITLE_TEXT_COLOR_1"] || tokens["MAIN_TITLE_TEXT_COLOR_1"] || "#0FF";
+      const cardTitleTxt2 = tokens["CARD_TITLE_TEXT_COLOR_2"] || "#FFF";
+      const borderClr     = tokens["MAIN_BORDER_COLOR"] || tokens["CARD_BORDER_COLOR_1"] || "#D12";
+      const cardBorder1   = tokens["CARD_BORDER_COLOR_1"] || borderClr;
+      const cardBorder2   = tokens["CARD_BORDER_COLOR_2"] || tokens["ACCENT_COLOR_2"] || "#3BF";
+      const titleClr      = tokens["MAIN_TITLE_TEXT_COLOR_1"] || "#FA0";
+      const textPrimary   = tokens["MAIN_TEXT_COLOR_1"] || "#FFF";
+      const textMuted     = tokens["MAIN_TEXT_COLOR_2"] || "#AAA";
+      const primaryBtn    = tokens["BTN_SAVE_BG_COLOR"] || tokens["ACCENT_COLOR_1"] || "#D12";
+      const highlight     = tokens["MAIN_LINK_COLOR_1"] || tokens["SECTION_TITLE_TEXT_COLOR"] || "#0FF";
+      const inputBg       = tokens["INPUT_BG_COLOR_1"] || "#100";
+      const inputBorder   = tokens["INPUT_BORDER_COLOR"] || "#411";
+      const inputFocus    = tokens["INPUT_FOCUS_BORDER_COLOR"] || titleClr;
 
       // Special Effects & Animated Border Settings
       const fx1 = tokens["SPECIAL_EFFECTS_COLOR_1"] || "#064";
@@ -1056,7 +1088,6 @@
       const animSpeed = tokens['CARD_BORDER_ANIMATE_SPEED'] || '5s';
       const animEffect = String(tokens['CARD_BORDER_ANIMATE_EFFECT'] || 'Laser Comet').toLowerCase().replace(/\s+/g, '-');
 
-      // Bind animation classes directly to body
       document.body.style.setProperty('--card-border-speed', animSpeed);
       document.body.classList.toggle('card-border-animated', isAnimateEnabled);
       document.body.classList.remove('effect-laser-comet', 'effect-dual-tone-blend', 'effect-hue-sweep', 'effect-fx-rainbow');
@@ -1068,6 +1099,10 @@
         :root {
           --page-bg: ${mainBg} !important;
           --card-bg: ${cardBg} !important;
+          --card-title-bg-color-1: ${cardTitleBg1} !important;
+          --card-title-bg-color-2: ${cardTitleBg2} !important;
+          --card-title-text-color-1: ${cardTitleTxt1} !important;
+          --card-title-text-color-2: ${cardTitleTxt2} !important;
           --border-color: ${borderClr} !important;
           --card-border-color-1: ${cardBorder1} !important;
           --card-border-color-2: ${cardBorder2} !important;
@@ -1105,7 +1140,18 @@
         }
 
         .accordion-header {
-          color: ${textPrimary} !important;
+          background: ${cardTitleBg1} !important;
+          color: ${cardTitleTxt1} !important;
+        }
+
+        .accordion-header:hover {
+          background: ${cardTitleBg2} !important;
+          color: ${cardTitleTxt2} !important;
+        }
+
+        .accordion-item.active .accordion-header {
+          background: ${cardTitleBg2} !important;
+          color: ${cardTitleTxt1} !important;
         }
 
         .code-pill {
@@ -1135,7 +1181,6 @@
       localStorage.setItem('epw_live_theme_css', generatedCss);
       localStorage.setItem('epw_live_theme_name', activeThemeName);
 
-      // Refresh open accordion height
       const activeAccordion = document.querySelector('.accordion-item.active');
       if (activeAccordion) {
         const content = activeAccordion.querySelector('.accordion-content');
@@ -1173,7 +1218,6 @@
     const allItems = Array.from(document.querySelectorAll('.accordion-item'));
     const isCurrentlyActive = item.classList.contains('active');
 
-    // Close all other items
     allItems.forEach(closeAccordionItem);
 
     if (!isCurrentlyActive) {
@@ -1216,19 +1260,15 @@
     const selectedKey = document.getElementById('platformSelect').value;
     const platform = platformRates[selectedKey] || platformRates.ebay;
 
-    // 1. On-Site (Stripe): 2.9% + $0.30
     const stripeFee = price > 0 ? (price * 0.029) + 0.30 : 0;
     const onsiteNet = Math.max(0, price - stripeFee);
 
-    // 2. Third-Party Platform
     const platformFee = price > 0 ? (price * platform.rate) + platform.fixed : 0;
     const platformNet = Math.max(0, price - platformFee);
 
-    // 3. Difference (In-Pocket Savings)
     const savings = Math.max(0, onsiteNet - platformNet);
     const savingsPercent = price > 0 ? ((savings / price) * 100).toFixed(1) : '0.0';
 
-    // Format USD
     const formatUSD = (val) => '$' + val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
     document.getElementById('onsiteGross').innerText = formatUSD(price);
@@ -1245,7 +1285,6 @@
     document.getElementById('savingsPlatformName').innerText = platform.name;
     document.getElementById('savingsPercentage').innerText = savingsPercent + '%';
 
-    // Adjust accordion height if currently active
     const calcAccordion = document.querySelector('.badge-calculator').closest('.accordion-item');
     if (calcAccordion && calcAccordion.classList.contains('active')) {
       const content = calcAccordion.querySelector('.accordion-content');
@@ -1259,7 +1298,6 @@
   document.addEventListener('DOMContentLoaded', () => {
     calculateSavings();
 
-    // Open 1st accordion by default (or restore last user-clicked accordion)
     const allItems = Array.from(document.querySelectorAll('.accordion-item'));
     const savedIndex = localStorage.getItem(STORAGE_KEY);
 
