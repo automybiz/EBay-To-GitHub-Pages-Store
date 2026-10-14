@@ -40,6 +40,13 @@
     box-sizing: border-box;
 }
 
+/* Safety net: stop any single wide element from creating a horizontal page
+   scroll on small screens. Applied to the root element, so the sticky header
+   continues to stick to the viewport as expected. */
+html {
+    overflow-x: hidden;
+}
+
 body {
     font-family: 'Inter', sans-serif;
     line-height: 1.6;
@@ -106,6 +113,7 @@ nav {
     text-decoration: none;
     color: var(--text-color);
     font-weight: 600;
+    font-size: 20px; /* +5px over the site's 15px base text size */
     transition: color 0.3s;
 }
 
@@ -395,5 +403,20 @@ footer {
     .section-header { flex-direction: column; align-items: flex-start; }
     .nav-links { margin-bottom: 10px; }
     .theme-toggle { margin-left: 0; margin-top: 10px; }
+
+    /* Mobile header: shrink the logo and let the menu wrap so the header is
+       never wider than the viewport. A too-wide header was forcing the whole
+       page wider than the screen, which clipped the content on phones. */
+    :root { --logo-height: 66px; }
+    body > header { padding: 14px 0; }
+    nav { flex-wrap: wrap; row-gap: 8px; }
+    .nav-links { flex-wrap: wrap; justify-content: center; row-gap: 4px; }
+    .nav-links li { margin-left: 14px; }
+}
+
+@media (max-width: 520px) {
+    :root { --logo-height: 52px; }
+    .container { padding: 0 14px; }
+    .nav-links li { margin-left: 10px; }
 }
 
