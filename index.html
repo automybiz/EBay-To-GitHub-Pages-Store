@@ -327,8 +327,17 @@
        forwards visitors to the inquiry form instead of a mailto: URL. */
     .contact-card .email-png {
       display: inline-block;
-      width: 210px;
+      width: 288px;
       height: auto;
+      vertical-align: middle;
+    }
+
+    /* Anti-scrape phone image: the number is shown as a PNG. Sized by height so
+       it matches the email images (both share the same 36px source height). */
+    .contact-card .phone-png {
+      display: inline-block;
+      height: 23px;
+      width: auto;
       vertical-align: middle;
     }
 
@@ -534,7 +543,11 @@
 
         <!-- Phone & General Inquiries -->
         <div class="contact-card">
-          <div class="card-title">+1 (844) URO-PART</div>
+          <div class="card-title">
+            <a href="inquiry.html">
+              <img src="assets/images/png_emails/+1 (844) URO-PART.png" alt="Phone" class="phone-png">
+            </a>
+          </div>
           <div>
             <a href="inquiry.html">
               <img src="assets/images/png_emails/sales@europartswest.com.png" alt="Email sales" class="email-png">
